@@ -127,28 +127,28 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
-          script: |
-            cd foodgram
+        script: |
+          cd foodgram
 
-            sudo rm -f .env        
-            sudo touch .env
-            sudo chmod 666 .env
+          sudo rm -f .env        
+          sudo touch .env
+          sudo chmod 666 .env
             
-            sudo echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> .env
-            sudo echo DEBUG=${{ secrets.DEBUG}} >> .env
-            sudo echo ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }} >> .env
-            sudo echo POSTGRES_DB=${{ secrets.POSTGRES_DB }} >> .env
-            sudo echo POSTGRES_USER=${{ secrets.POSTGRES_USER }} >> .env
-            sudo echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
-            sudo echo DB_NAME=${{ secrets.DB_NAME }} >> .env
-            sudo echo DB_HOST=${{ secrets.DB_HOST }} >> .env
-            sudo echo DB_PORT=${{ secrets.DB_PORT }} >> .env
+          sudo echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> .env
+          sudo echo DEBUG=${{ secrets.DEBUG}} >> .env
+          sudo echo ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }} >> .env
+          sudo echo POSTGRES_DB=${{ secrets.POSTGRES_DB }} >> .env
+          sudo echo POSTGRES_USER=${{ secrets.POSTGRES_USER }} >> .env
+          sudo echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
+          sudo echo DB_NAME=${{ secrets.DB_NAME }} >> .env
+          sudo echo DB_HOST=${{ secrets.DB_HOST }} >> .env
+          sudo echo DB_PORT=${{ secrets.DB_PORT }} >> .env
             
-            cd infra
+          cd infra
             
-            sudo docker compose -f docker-compose.production.yml pull
-            sudo docker compose -f docker-compose.production.yml down
-            sudo docker compose -f docker-compose.production.yml up -d
+          sudo docker compose -f docker-compose.production.yml pull
+          sudo docker compose -f docker-compose.production.yml down
+          sudo docker compose -f docker-compose.production.yml up -d
 
   send_message:
     name: Sending Telegram message
