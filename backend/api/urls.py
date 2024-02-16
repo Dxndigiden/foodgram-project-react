@@ -7,11 +7,11 @@ from api.views import (AddAndDeleteSubscribe, AddDeleteFavoriteRecipe,
 
 app_name = 'api'
 
-router_v1 = DefaultRouter()
-router_v1.register('users', UsersViewSet)
-router_v1.register('tags', TagsViewSet)
-router_v1.register('ingredients', IngredientsViewSet)
-router_v1.register('recipes', RecipesViewSet)
+router = DefaultRouter()
+router.register('users', UsersViewSet)
+router.register('tags', TagsViewSet)
+router.register('ingredients', IngredientsViewSet)
+router.register('recipes', RecipesViewSet)
 
 
 urlpatterns = [
@@ -30,7 +30,7 @@ urlpatterns = [
     path('recipes/<int:recipe_id>/shopping_cart/',
          AddDeleteShoppingCart.as_view(),
          name='shopping_cart'),
-    path('', include(router_v1.urls)),
+    path('', include(router.urls)),
     path('', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
 ]
