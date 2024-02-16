@@ -103,4 +103,4 @@ jobs:
       with:
         to: ${{ secrets.TELEGRAM_TO }}
         token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: Деплой ${{ github.workflow }}  успешно выполнен!
+        message: Деплой Foodgram успешно выполнен!
