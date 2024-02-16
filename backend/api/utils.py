@@ -1,25 +1,42 @@
-from django.db.models import Sum
+import io
 
-from recipes.models import RecipeIngredient
+from django.http import HttpResponse
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
 
 
-def shopping_cart_report(user):
-    """обработка корзины покупок"""
-
-    ingredient_totals = RecipeIngredient.objects.filter(
-        recipe__shopping_list__user=user,
-    ).values(
-        'ingredient__name', 'ingredient__measurement_unit',
-    ).annotate(
-        total_amount=Sum('amount')
-    ).order_by('ingredient__name')
-
-    buy_list_text = 'Foodgram\nКорзина покупок:\n'
-    for ingredient_total in ingredient_totals:
-        ingredient_name = ingredient_total['ingredient__name']
-        measurement_unit = ingredient_total['ingredient__measurement_unit']
-        total_amount = ingredient_total['total_amount']
-        buy_list_text += (f'{ingredient_name}, '
-                          f'{total_amount} {measurement_unit}\n')
-
-    return buy_list_text
+def create_shopping_cart(ingredients_cart):
+    """Формирование списка покупок"""
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = (
+        "attachment; filename='shopping_cart.pdf'"
+    )
+    pdfmetrics.registerFont(
+        TTFont('Arial', 'data/arial.ttf', 'UTF-8')
+    )
+    buffer = io.BytesIO()
+    pdf_file = canvas.Canvas(buffer)
+    pdf_file.setFont('Arial', 24)
+    pdf_file.drawString(200, 800, 'Список покупок.')
+    pdf_file.setFont('Arial', 14)
+    from_bottom = 750
+    for number, ingredient in enumerate(ingredients_cart, start=1):
+        pdf_file.drawString(
+            50,
+            from_bottom,
+            f"{number}. {ingredient['ingredient__name']}: "
+            f"{ingredient['ingredient_value']} "
+            f"{ingredient['ingredient__measurement_unit']}.",
+        )
+        from_bottom -= 20
+        if from_bottom <= 50:
+            from_bottom = 800
+            pdf_file.showPage()
+            pdf_file.setFont('Arial', 14)
+    pdf_file.showPage()
+    pdf_file.save()
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.write(pdf)
+    return response
