@@ -88,11 +88,11 @@ jobs:
           sudo docker image prune -af
           sudo docker compose -f docker-compose.yml down
           sudo docker compose up -d
-          sudo docker compose exec -it backend python manage.py makemigrations users
-          sudo docker compose exec -it backend python manage.py makemigrations recipes
-          sudo docker compose exec -it backend python manage.py migrate
-          sudo docker compose exec -it backend python manage.py collectstatic --noinput
-          sudo docker compose -f exec -it backend python manage.py ingredients_load
+          sudo docker compose exec -T backend python manage.py makemigrations users
+          sudo docker compose exec -T backend python manage.py makemigrations recipes
+          sudo docker compose exec -T backend python manage.py migrate
+          sudo docker compose exec -T backend python manage.py collectstatic --noinput
+          sudo docker compose exec -T backend python manage.py loaddata ingredients.json
 
   send_message:
     runs-on: ubuntu-latest
