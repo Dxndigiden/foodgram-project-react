@@ -1,109 +1,61 @@
+from django import forms
 from django.contrib import admin
 
-from .models import (FavoriteRecipe, Ingredient, Recipe, RecipeIngredient,
-                     ShoppingCart, Tag)
-from users.models import Subscribe
+from recipes.models import (
+    Favorite, Ingredient, RecipeIngredient,
+    Recipe, ShoppingCart, Tag
+)
 
-EMPTY_MSG = '-пусто-'
 
-
-class RecipeIngredientAdmin(admin.StackedInline):
+class RecipeIngredientInline(admin.TabularInline):
     model = RecipeIngredient
-    autocomplete_fields = ('ingredient',)
+    extra = 1
+    min_num = 1
 
 
-@admin.register(Recipe)
+class RecipeAdminForm(forms.ModelForm):
+    class Meta:
+        model = Recipe
+        fields = '__all__'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        title = cleaned_data.get('title')
+
+        if title and not title.istitle():
+            raise forms.ValidationError(
+                {'title': "Название должно начинаться с заглавной буквы."})
+
+        return cleaned_data
+
+
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = (
-        'id', 'get_author', 'name', 'text',
-        'cooking_time', 'get_tags', 'get_ingredients',
-        'pub_date', 'get_favorite_count')
-    search_fields = (
-        'name', 'cooking_time',
-        'author__email', 'ingredients__name')
-    list_filter = ('pub_date', 'tags',)
-    inlines = (RecipeIngredientAdmin,)
-    empty_value_display = EMPTY_MSG
+    form = RecipeAdminForm
 
-    @admin.display(
-        description='Электронная почта автора')
-    def get_author(self, obj):
-        return obj.author.email
+    inlines = [RecipeIngredientInline]
+    list_display = ('name', 'author', 'favorites_count')
+    search_fields = ('name',)
+    list_filter = ('name', 'author', 'tags')
 
-    @admin.display(description='Тэги')
-    def get_tags(self, obj):
-        list_ = [_.name for _ in obj.tags.all()]
-        return ', '.join(list_)
-
-    @admin.display(description=' Ингредиенты ')
-    def get_ingredients(self, obj):
-        return '\n '.join([
-            f'{item["ingredient__name"]} - {item["amount"]}'
-            f' {item["ingredient__measurement_unit"]}.'
-            for item in obj.recipe.values(
-                'ingredient__name',
-                'amount', 'ingredient__measurement_unit')])
-
-    @admin.display(description='В избранном')
-    def get_favorite_count(self, obj):
-        return obj.favoriterecipe.count()
+    def favorites_count(self, obj):
+        return obj.favorites.count()
 
 
-@admin.register(Tag)
-class TagAdmin(admin.ModelAdmin):
-    list_display = (
-        'id', 'name', 'color', 'slug',)
-    search_fields = ('name', 'slug',)
-    empty_value_display = EMPTY_MSG
-
-
-@admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
-    list_display = (
-        'id', 'name', 'measurement_unit',)
-    search_fields = (
-        'name', 'measurement_unit',)
-    empty_value_display = EMPTY_MSG
+    list_display = ('name',)
+    search_fields = ('name',)
+    list_filter = ('name',)
 
 
-@admin.register(Subscribe)
-class SubscribeAdmin(admin.ModelAdmin):
-    list_display = (
-        'id', 'user', 'author', 'created',)
-    search_fields = (
-        'user__email', 'author__email',)
-    empty_value_display = EMPTY_MSG
+class TagAdmin(admin.ModelAdmin):
+    list_display = ('name', 'color', 'slug')
+    search_fields = ('name', 'slug')
+    list_filter = ('name', 'slug')
+    prepopulated_fields = {'slug': ('name',)}
 
 
-@admin.register(FavoriteRecipe)
-class FavoriteRecipeAdmin(admin.ModelAdmin):
-    list_display = (
-        'id', 'user', 'get_recipe', 'get_count')
-    empty_value_display = EMPTY_MSG
-
-    @admin.display(
-        description='Рецепты')
-    def get_recipe(self, obj):
-        return [
-            f'{item["name"]} ' for item in obj.recipe.values('name')[:5]]
-
-    @admin.display(
-        description='В избранных')
-    def get_count(self, obj):
-        return obj.recipe.count()
-
-
-@admin.register(ShoppingCart)
-class ShoppingCartAdmin(admin.ModelAdmin):
-    list_display = (
-        'id', 'user', 'get_recipe', 'get_count')
-    empty_value_display = EMPTY_MSG
-
-    @admin.display(description='Рецепты')
-    def get_recipe(self, obj):
-        return [
-            f'{item["name"]} ' for item in obj.recipe.values('name')[:5]]
-
-    @admin.display(description='В избранных')
-    def get_count(self, obj):
-        return obj.recipe.count()
+admin.site.register(Recipe, RecipeAdmin)
+admin.site.register(Ingredient, IngredientAdmin)
+admin.site.register(Tag, TagAdmin)
+admin.site.register(Favorite)
+admin.site.register(ShoppingCart)
