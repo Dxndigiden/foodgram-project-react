@@ -102,12 +102,12 @@ class RecipeReadSerializer(ModelSerializer):
             'text',
             'cooking_time',
         )
-    
+
     def get_image_url(self, obj):
         if obj.image:
             return obj.image.url
         return None
-        
+
     def get_ingredients(self, obj):
         recipe = obj
         ingredients = recipe.ingredients.values(
