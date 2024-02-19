@@ -109,9 +109,8 @@ DEBUG=False
 
 ## Ссылки
 
-- [Развернутый проект](https://foodgrambydxn.sytes.net)
+- [Foodgram в интернете](https://foodgrambydxn.sytes.net)
 
 ## Автор
 
 Автор: [Dxndigiden](https://github.com/dxndigiden)
-
