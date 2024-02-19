@@ -1,11 +1,9 @@
 from colorfield.fields import ColorField
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator, validate_slug
+from django.core.validators import validate_slug
 from django.db import models
 
-from core.constants import (MAX_LENGTH_STRING,
-                            MAX_LENGTH_COLOR,
-                            MIN_COOKING_TIME)
+from core.constants import (MAX_LENGTH_STRING, MAX_LENGTH_COLOR,)
 
 User = get_user_model()
 
