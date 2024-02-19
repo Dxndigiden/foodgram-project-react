@@ -1,18 +1,16 @@
-version: '3.8'
+version: '3'
 
 volumes:
-  db_data:
+  pg_data:
   static_value:
   media_value:
 
 services:
   db:
     image: postgres:13
+    env_file: .env
     volumes:
-      - db_data:/var/lib/postgresql/data/
-    env_file:
-      - .env
-    restart: always
+      - pg_data:/var/lib/postgresql/data/
 
   backend:
     image: dxndigiden/foodgram_backend:latest
