@@ -7,11 +7,12 @@ volumes:
 
 services:
   db:
-    image: postgres:13.0-alpine
+    image: postgres:14.10
     volumes:
       - db_data:/var/lib/postgresql/data/
     env_file:
       - .env
+    restart: always
 
   backend:
     image: dxndigiden/foodgram_backend:latest
