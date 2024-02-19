@@ -22,13 +22,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
     'django_filters',
     'djoser',
     'colorfield',
-
+    'drf_base64',
+    'drf_yasg',
     'api',
     'users',
     'recipes',
