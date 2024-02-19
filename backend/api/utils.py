@@ -1,11 +1,11 @@
 from django.db.models import Sum
 
-from recipes.models import RecipeIngredient
+from recipes.models import IngredientInRecipe
 
 
 def shopping_cart_report(user):
 
-    ingredient_totals = RecipeIngredient.objects.filter(
+    ingredient_totals = IngredientInRecipe.objects.filter(
         recipe__shopping_list__user=user,
     ).values(
         'ingredient__name', 'ingredient__measurement_unit',
