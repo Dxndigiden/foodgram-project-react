@@ -1,2 +1,10 @@
-MAX_LENGTH_NAME = 150
-MAX_LENGTH_EMAIL = 254
+MAX_LENGTH_NAME = 175
+MAX_LENGTH_EMAIL = 256
+MAX_LENGTH_COLOR = 7
+MIN_TIME_MESSAGE = 'Минимальное время приготовления 1 минута'
+MAX_TIME_MESSAGE = 'Максимальное время приготовления  1 день (1440 минут)'
+MIN_INGR_MESSAGE = 'Выберете минимум 1 ингредиент'
+MAX_INGR_MESSAGE = 'Максимальный вес ингредиента - 3000 г'
+MIN_AMOUNT = 1
+MAX_AMOUNT_TIME = 1440
+MAX_AMOUNT_INGR = 3000
