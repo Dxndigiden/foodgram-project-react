@@ -124,7 +124,7 @@ REST_FRAMEWORK = {
 DJOSER = {
     'SERIALIZERS': {
         'user_create': 'api.serializers.FoodUserCreateSerializer',
-        'user': 'api.serializers.FoodserSerializer',
+        'user': 'api.serializers.FoodUserSerializer',
         'current_user': 'api.serializers.FoodUserSerializer',
     },
 
