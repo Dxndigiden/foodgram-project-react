@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        with open('tags.csv', 'r', encoding='utf-8') as file:
+        with open('data/tags.csv', 'r', encoding='utf-8') as file:
             reader = csv.reader(file, delimiter=',')
             tags_to_create = []
 
