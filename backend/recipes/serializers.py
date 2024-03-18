@@ -18,15 +18,6 @@ from recipes.models import Ingredient, Recipe, Tag, IngredientInRecipe
 from users.serializers import FoodUserSerializer
 
 
-class RecipeShortSerializer(ModelSerializer):
-
-    image = Base64ImageField()
-
-    class Meta:
-        model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
-
-
 class IngredientSerializer(ModelSerializer):
 
     class Meta:

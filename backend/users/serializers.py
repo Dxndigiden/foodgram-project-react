@@ -1,8 +1,10 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
+from drf_extra_fields.fields import Base64ImageField
 from rest_framework.fields import SerializerMethodField
+from rest_framework.serializers import ModelSerializer
 
 from .models import User, Subscription
-from recipes.serializers import RecipeShortSerializer
+from recipes.models import Recipe
 
 
 class FoodUserCreateSerializer(UserCreateSerializer):
@@ -26,6 +28,15 @@ class FoodUserSerializer(UserSerializer):
         model = User
         fields = ('email', 'id', 'username',
                   'first_name', 'last_name', 'is_subscribed', )
+
+
+class RecipeShortSerializer(ModelSerializer):
+
+    image = Base64ImageField()
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
 
 
 class SubscribeSerializer(FoodUserSerializer):

@@ -17,11 +17,11 @@ from core.constants import ERR_ALREADY_RECIPE, ERR_DEL_RECIPE
 from .filters import IngredientFilter, RecipeFilter
 from .serializers import (IngredientSerializer,
                           RecipeReadSerializer,
-                          RecipeShortSerializer,
                           RecipeWriteSerializer,
                           TagSerializer)
 from api.pagination import FoodPagination
 from users.permissions import IsAdminOrAuthorOrReadOnly
+from users.serializers import RecipeShortSerializer
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
