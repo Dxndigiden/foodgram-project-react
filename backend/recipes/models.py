@@ -11,8 +11,7 @@ from core.constants import (
     MAX_INGR_MESSAGE,
     MIN_AMOUNT,
     MAX_AMOUNT_TIME,
-    MAX_AMOUNT_INGR,
-    )
+    MAX_AMOUNT_INGR)
 from users.models import User
 
 
