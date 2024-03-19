@@ -1,27 +1,115 @@
 from datetime import datetime
 
-from django.db import models
+from django.contrib.auth.hashers import make_password
+from django.db import IntegrityError, models
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from djoser.views import UserViewSet
 from recipes.models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
                             ShoppingCart, Tag)
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework.status import (HTTP_200_OK, HTTP_400_BAD_REQUEST,
+                                   HTTP_401_UNAUTHORIZED)
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+from users.models import User, Subscription
 
-from core.constants import ERR_ALREADY_RECIPE, ERR_DEL_RECIPE
-from .filters import IngredientFilter, RecipeFilter
-from .serializers import (IngredientSerializer,
-                          RecipeReadSerializer,
-                          RecipeWriteSerializer,
-                          TagSerializer)
+from core.constants import (ERR_SUB_YOUSELF,
+                            ERR_ALREADY_SUB,
+                            ERR_NOT_FOUND,
+                            ERR_ALREADY_RECIPE,
+                            ERR_DEL_RECIPE)
+from api.filters import IngredientFilter, RecipeFilter
 from api.pagination import FoodPagination
-from users.permissions import IsAdminOrAuthorOrReadOnly
-from users.serializers import RecipeShortSerializer
+from api.permissions import IsAdminOrAuthorOrReadOnly
+from api.serializers import (FoodUserSerializer, IngredientSerializer,
+                             RecipeReadSerializer, RecipeShortSerializer,
+                             RecipeWriteSerializer, SubscribeSerializer,
+                             TagSerializer)
+
+
+class FoodUserViewSet(UserViewSet):
+
+    queryset = User.objects.all()
+    serializer_class = FoodUserSerializer
+    pagination_class = FoodPagination
+
+    @action(detail=False, methods=['post'],
+            permission_classes=[IsAuthenticated])
+    def set_password(self, request, pk=None):
+        user = self.request.user
+        if user.is_anonymous:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+        new_password = request.data.get('new_password')
+        if not new_password:
+            return Response({'new_password': ['This field is required.']},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        user.password = make_password(new_password)
+        user.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, permission_classes=[IsAuthenticated])
+    def subscriptions(self, request):
+        user = request.user
+        queryset = User.objects.filter(following_user=user)
+        pages = self.paginate_queryset(queryset)
+        serializer = SubscribeSerializer(
+            pages, many=True, context={'request': request}
+        )
+        return self.get_paginated_response(serializer.data)
+
+    @action(methods=['post', 'delete'], detail=True,
+            permission_classes=[IsAuthenticated])
+    def subscribe(self, request, id):
+        user = self.request.user
+        author = get_object_or_404(User, id=id)
+
+        if user.is_anonymous:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            if request.method == 'POST':
+                if user == author:
+                    data = {'errors': ERR_SUB_YOUSELF}
+                    return Response(data=data,
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+                Subscription.objects.create(user=user, author=author)
+                serializer = SubscribeSerializer(author,
+                                                 context={'request': request})
+                return Response(serializer.data,
+                                status=status.HTTP_201_CREATED)
+
+        except IntegrityError:
+            data = {'errors': ERR_ALREADY_SUB}
+            return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
+
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+    @action(detail=False, methods=['get'],
+            permission_classes=[IsAuthenticated])
+    def me(self, request):
+        user = request.user
+        if user.is_authenticated:
+            serializer = FoodUserSerializer(
+                user,
+                context=self.get_serializer_context()
+            )
+            return Response(serializer.data, status=HTTP_200_OK)
+        else:
+            return Response({'detail': ERR_NOT_FOUND},
+                            status=HTTP_401_UNAUTHORIZED)
+
+    @me.mapping.post
+    def me_post(self, request):
+        return self.me(request)
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):

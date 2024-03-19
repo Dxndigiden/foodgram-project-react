@@ -1,5 +1,5 @@
-MAX_LENGTH_NAME = 175
-MAX_LENGTH_EMAIL = 256
+MAX_LENGTH_NAME = 150
+MAX_LENGTH_EMAIL = 254
 MAX_LENGTH_COLOR = 7
 MIN_TIME_MESSAGE = 'Минимальное время приготовления 1 минута'
 MAX_TIME_MESSAGE = 'Максимальное время приготовления  1 день (1440 минут)'
