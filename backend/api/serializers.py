@@ -91,10 +91,10 @@ class RecipeReadSerializer(ModelSerializer):
 
     tags = TagSerializer(many=True, read_only=True)
     author = FoodUserSerializer(read_only=True)
-    ingredients = IngredientSerializer(read_only=True)
+    ingredients = SerializerMethodField()
     image = SerializerMethodField('get_image_url')
-    is_favorite = SerializerMethodField(read_only=True)
-    is_shopping_cart = SerializerMethodField(read_only=True)
+    is_favorited = SerializerMethodField(read_only=True)
+    is_in_shopping_cart = SerializerMethodField(read_only=True)
 
     class Meta:
         model = Recipe
@@ -103,8 +103,8 @@ class RecipeReadSerializer(ModelSerializer):
             'tags',
             'author',
             'ingredients',
-            'is_favorite',
-            'is_shopping_cart',
+            'is_favorited',
+            'is_in_shopping_cart',
             'name',
             'image',
             'text',
@@ -122,19 +122,21 @@ class RecipeReadSerializer(ModelSerializer):
             'id',
             'name',
             'measurement_unit',
-            amount=models.F('ingredientinrecipe_amount')
+            amount=models.F('ingredientinrecipe__amount')
         )
         return ingredients
 
-    def get_is_favorite(self, obj):
+    def get_is_favorited(self, obj):
         user = self.context.get('request').user
-        return (not user.is_anonymous
-                and user.favorite.filter(recipe=obj).exists())
+        if user.is_anonymous:
+            return False
+        return user.favorites.filter(recipe=obj).exists()
 
-    def get_is_shopping_cart(self, obj):
+    def get_is_in_shopping_cart(self, obj):
         user = self.context.get('request').user
-        return (not user.is_anonymous
-                and user.shopping_cart.filter(recipe=obj).exists())
+        if user.is_anonymous:
+            return False
+        return user.shopping_cart.filter(recipe=obj).exists()
 
 
 class IngredientInRecipeWriteSerializer(ModelSerializer):
@@ -144,21 +146,6 @@ class IngredientInRecipeWriteSerializer(ModelSerializer):
     class Meta:
         model = IngredientInRecipe
         fields = ('id', 'amount')
-
-    def validate_ingredients(self, value):
-        ingredients = value
-        if not ingredients:
-            raise ValidationError(NOT_AMOUNT_MESSAGE)
-
-        ingredients_list = []
-        for item in ingredients:
-            ingredient = get_object_or_404(Ingredient, id=item['id'])
-            if ingredient in ingredients_list:
-                raise ValidationError(NOT_REPEAT_MESSAGE)
-            if int(item['amount']) <= 0:
-                raise ValidationError(MIN_AMOUNT_MESSAGE)
-            ingredients_list.append(ingredient)
-        return value
 
 
 class RecipeWriteSerializer(ModelSerializer):
@@ -181,6 +168,21 @@ class RecipeWriteSerializer(ModelSerializer):
             'text',
             'cooking_time',
         )
+
+    def validate_ingredients(self, value):
+        ingredients = value
+        if not ingredients:
+            raise ValidationError(NOT_AMOUNT_MESSAGE)
+
+        ingredients_list = []
+        for item in ingredients:
+            ingredient = get_object_or_404(Ingredient, id=item['id'])
+            if ingredient in ingredients_list:
+                raise ValidationError(NOT_REPEAT_MESSAGE)
+            if int(item['amount']) <= 0:
+                raise ValidationError(MIN_AMOUNT_MESSAGE)
+            ingredients_list.append(ingredient)
+        return value
 
     def validate_tags(self, value):
         tags = value
