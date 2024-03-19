@@ -55,7 +55,7 @@ class SubscribeSerializer(FoodUserSerializer):
 
     recipes = SerializerMethodField()
     recipes_count = SerializerMethodField()
-
+s
     class Meta:
         model = User
         fields = ('email', 'id', 'username', 'first_name', 'last_name',
