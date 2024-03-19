@@ -40,7 +40,7 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = ('author', 'name', 'tags')
     inlines = (IngredientRecipeLine,)
 
-    def is_favorited(self, obj):
+    def is_favorite(self, obj):
         return Favorite.objects.filter(recipe=obj).count()
 
 
