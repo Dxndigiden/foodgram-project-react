@@ -2,7 +2,6 @@ import re
 
 from django.db import transaction, models
 from django.shortcuts import get_object_or_404
-from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import IntegerField, SerializerMethodField
@@ -16,64 +15,11 @@ from core.constants import (NOT_AMOUNT_MESSAGE,
                             UNIQUE_TAG_MESSAGE,
                             VALIDATE_NAME_MESSAGE)
 from recipes.models import Ingredient, Recipe, Tag, IngredientInRecipe
-from users.models import User, Subscription
-
-
-class FoodUserCreateSerializer(UserCreateSerializer):
-
-    class Meta(UserCreateSerializer.Meta):
-        fields = ('email', 'id', 'username',
-                  'first_name', 'last_name', 'password')
-
-
-class FoodUserSerializer(UserSerializer):
-
-    is_subscribed = SerializerMethodField()
-
-    def get_is_subscribed(self, obj):
-        user = self.context['request'].user
-        return (not user.is_anonymous
-                and Subscription.objects.filter(
-                    user=user, author=obj).exists())
-
-    class Meta:
-        model = User
-        fields = ('email', 'id', 'username',
-                  'first_name', 'last_name', 'is_subscribed', )
-
-
-class RecipeShortSerializer(ModelSerializer):
-
-    image = Base64ImageField()
-
-    class Meta:
-        model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
-
-
-class SubscribeSerializer(FoodUserSerializer):
-
-    recipes = SerializerMethodField()
-    recipes_count = SerializerMethodField()
-s
-    class Meta:
-        model = User
-        fields = ('email', 'id', 'username', 'first_name', 'last_name',
-                  'is_subscribed', 'recipes', 'recipes_count', )
-
-    def get_recipes(self, obj):
-        limit = self.context['request'].query_params.get('recipes_limit')
-        recipes = (
-            obj.recipes.all()[:int(limit)]
-            if limit is not None else obj.recipes.all()
-        )
-        return RecipeShortSerializer(recipes, many=True).data
-
-    def get_recipes_count(self, obj):
-        return obj.recipes.count()
+from users.serializers import FoodUserSerializer
 
 
 class IngredientSerializer(ModelSerializer):
+    """Сериализатор ингредиента"""
 
     class Meta:
         model = Ingredient
@@ -81,6 +27,7 @@ class IngredientSerializer(ModelSerializer):
 
 
 class TagSerializer(ModelSerializer):
+    """Сериализатор тега"""
 
     class Meta:
         model = Tag
@@ -88,6 +35,7 @@ class TagSerializer(ModelSerializer):
 
 
 class RecipeReadSerializer(ModelSerializer):
+    """Сериализатор чтения рецепта"""
 
     tags = TagSerializer(many=True, read_only=True)
     author = FoodUserSerializer(read_only=True)
@@ -140,6 +88,7 @@ class RecipeReadSerializer(ModelSerializer):
 
 
 class IngredientInRecipeWriteSerializer(ModelSerializer):
+    """Сериализатор ингредиента в рецепте"""
 
     id = IntegerField(write_only=True)
 
@@ -149,6 +98,7 @@ class IngredientInRecipeWriteSerializer(ModelSerializer):
 
 
 class RecipeWriteSerializer(ModelSerializer):
+    """Сериализатор создания рецепта"""
 
     tags = PrimaryKeyRelatedField(queryset=Tag.objects.all(),
                                   many=True)

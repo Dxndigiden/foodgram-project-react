@@ -6,6 +6,8 @@ from .models import Subscription, User
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
+    """Админка для пользователя"""
+
     list_display = ('id', 'username', 'first_name',
                     'last_name', 'email', 'get_recipe_count',
                     'get_follower_count', 'password')
@@ -31,6 +33,8 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Subscription)
 class SubscribeAdmin(admin.ModelAdmin):
+    """Админка подписки"""
+
     list_display = ('id', 'user', 'author')
     search_fields = ('user',)
     list_filter = ('user', )

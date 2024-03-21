@@ -6,6 +6,7 @@ from core.constants import MAX_LENGTH_NAME, MAX_LENGTH_EMAIL
 
 class User(AbstractUser):
     """Модель пользователя"""
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
     email = models.EmailField(
@@ -38,6 +39,7 @@ class User(AbstractUser):
 
 class Subscription(models.Model):
     """Модель подписки"""
+
     user = models.ForeignKey(
         User,
         verbose_name='Пользователь',
