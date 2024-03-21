@@ -29,9 +29,9 @@ class User(AbstractUser):
     )
 
     class Meta:
-        ordering = ('id',)
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+        ordering = ('id',)
 
     def __str__(self):
         return self.username
@@ -43,13 +43,13 @@ class Subscription(models.Model):
     user = models.ForeignKey(
         User,
         verbose_name='Пользователь',
-        related_name='User',
+        related_name='follower',
         on_delete=models.CASCADE
     )
     author = models.ForeignKey(
         User,
         verbose_name='Автор',
-        related_name='follower',
+        related_name='following',
         on_delete=models.CASCADE
     )
 
