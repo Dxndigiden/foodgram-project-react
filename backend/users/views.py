@@ -11,7 +11,8 @@ from users.models import User, Subscription
 
 from core.constants import (ERR_SUB_YOUSELF,
                             ERR_ALREADY_SUB,
-                            ERR_NOT_FOUND,)
+                            ERR_NOT_FOUND,
+                            ERR_SUB_ALL)
 from api.pagination import FoodPagination
 from .serializers import (FoodUserSerializer,
                           SubscribeSerializer)
@@ -55,6 +56,7 @@ class FoodUserViewSet(UserViewSet):
             permission_classes=[IsAuthenticated])
     def subscribe(self, request, id):
         user = self.request.user
+        user = self.request.user
         author = get_object_or_404(User, id=id)
 
         if user.is_anonymous:
@@ -72,6 +74,17 @@ class FoodUserViewSet(UserViewSet):
                                                  context={'request': request})
                 return Response(serializer.data,
                                 status=status.HTTP_201_CREATED)
+
+            elif request.method == 'DELETE':
+                subscribe = Subscription.objects.filter(user=user,
+                                                        author=author)
+                if subscribe.exists():
+                    subscribe.delete()
+                    return Response(status=status.HTTP_204_NO_CONTENT)
+                else:
+                    data = {'errors': ERR_SUB_ALL}
+                    return Response(data=data,
+                                    status=status.HTTP_400_BAD_REQUEST)
 
         except IntegrityError:
             data = {'errors': ERR_ALREADY_SUB}
