@@ -110,8 +110,8 @@ class RecipeViewSet(ModelViewSet):
         ingredients = IngredientInRecipe.objects.filter(
             recipe__shopping_cart__user=request.user
         ).values(
-            'ingredient_name',
-            'ingredient_measurement_unit'
+            'ingredient__name',
+            'ingredient__measurement_unit'
         ).annotate(amount=models.Sum('amount'))
 
         today = datetime.today()
@@ -120,8 +120,8 @@ class RecipeViewSet(ModelViewSet):
             f'Дата: {today:%Y-%m-%d}\n\n'
         )
         shopping_list += '\n'.join([
-            f'- {ingredient["ingredient_name"]} '
-            f'({ingredient["ingredient_measurement_unit"]})'
+            f'- {ingredient["ingredient__name"]} '
+            f'({ingredient["ingredient__measurement_unit"]})'
             f' - {ingredient["amount"]}'
             for ingredient in ingredients
         ])
