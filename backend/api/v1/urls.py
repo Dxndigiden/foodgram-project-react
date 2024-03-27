@@ -12,7 +12,7 @@ router_v1.register(r'recipes', RecipeViewSet, basename='recipes')
 
 
 urlpatterns = [
-    path('', include(router_v1.urls)),
-    path('', include('djoser.urls')),
-    path('auth/', include('djoser.urls.authtoken')),
+    path('v1/', include(router_v1.urls)),
+    path('v1/', include('djoser.urls')),
+    path('v1/auth/', include('djoser.urls.authtoken')),
 ]

@@ -170,7 +170,7 @@ class Favorite(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.user} добавил "{self.recipe}" в Избранное'
+        return f'{self.user} добавил "{self.recipe}" в избранное'
 
 
 class ShoppingCart(models.Model):
