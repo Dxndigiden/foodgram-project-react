@@ -39,7 +39,7 @@ class RecipeReadSerializer(ModelSerializer):
 
     tags = TagSerializer(many=True, read_only=True)
     author = FoodUserSerializer(read_only=True)
-    ingredients = IngredientSerializer(many=True, read_only=True)
+    ingredients = SerializerMethodField()
     image = SerializerMethodField('get_image_url')
     is_favorited = SerializerMethodField(read_only=True)
     is_in_shopping_cart = SerializerMethodField(read_only=True)
@@ -92,6 +92,21 @@ class IngredientInRecipeWriteSerializer(ModelSerializer):
         model = IngredientInRecipe
         fields = ('id', 'amount')
 
+    def validate_ingredients(self, value):
+        ingredients = value
+        if not ingredients:
+            raise ValidationError(NOT_AMOUNT_MESSAGE)
+
+        ingredients_list = []
+        for item in ingredients:
+            ingredient = get_object_or_404(Ingredient, id=item['id'])
+            if ingredient in ingredients_list:
+                raise ValidationError(NOT_REPEAT_MESSAGE)
+            if int(item['amount']) <= 0:
+                raise ValidationError(MIN_AMOUNT_MESSAGE)
+            ingredients_list.append(ingredient)
+        return value
+
 
 class RecipeWriteSerializer(ModelSerializer):
     """Сериализатор создания рецепта"""
@@ -114,21 +129,6 @@ class RecipeWriteSerializer(ModelSerializer):
             'text',
             'cooking_time',
         )
-
-    def validate_ingredients(self, value):
-        ingredients = value
-        if not ingredients:
-            raise ValidationError(NOT_AMOUNT_MESSAGE)
-
-        ingredients_list = []
-        for item in ingredients:
-            ingredient = get_object_or_404(Ingredient, id=item['id'])
-            if ingredient in ingredients_list:
-                raise ValidationError(NOT_REPEAT_MESSAGE)
-            if int(item['amount']) <= 0:
-                raise ValidationError(MIN_AMOUNT_MESSAGE)
-            ingredients_list.append(ingredient)
-        return value
 
     def validate_tags(self, value):
         tags = value
