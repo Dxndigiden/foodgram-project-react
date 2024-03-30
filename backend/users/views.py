@@ -57,9 +57,6 @@ class FoodUserViewSet(UserViewSet):
         user = self.request.user
         author = get_object_or_404(User, id=id)
 
-        if user.is_anonymous:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-
         try:
             if request.method == 'POST':
                 if user == author:
