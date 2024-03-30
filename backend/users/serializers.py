@@ -3,7 +3,7 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
 
-from .models import User, Subscription
+from .models import User
 from recipes.models import Recipe
 
 
@@ -28,8 +28,8 @@ class FoodUserSerializer(UserSerializer):
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
         return (not user.is_anonymous
-                and Subscription.objects.filter(
-                    user=user, author=obj).exists())
+                and obj.following.filter(
+                    user=user).exists())
 
 
 class RecipeShortSerializer(ModelSerializer):
@@ -55,10 +55,7 @@ class SubscribeSerializer(FoodUserSerializer):
 
     def get_recipes(self, obj):
         limit = self.context['request'].query_params.get('recipes_limit')
-        recipes = (
-            obj.recipes.all()[:int(limit)]
-            if limit is not None else obj.recipes.all()
-        )
+        recipes = obj.recipes.all()[:limit]
         return RecipeShortSerializer(recipes, many=True).data
 
     def get_recipes_count(self, obj):
