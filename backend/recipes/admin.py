@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from core.constants import MIN_AMOUNT
+from core.constants import MIN_AMOUNT_TIME_OR_INGR
 from .models import (Ingredient,
                      Tag,
                      Recipe,
@@ -13,10 +13,9 @@ class IngredientRecipeInLine(admin.TabularInline):
     """Инлайн ингредиента в рецепте"""
 
     model = IngredientInRecipe
-    min_num = MIN_AMOUNT
+    min_num = MIN_AMOUNT_TIME_OR_INGR
     validate_min = True
-
-    extra = MIN_AMOUNT
+    extra = MIN_AMOUNT_TIME_OR_INGR
 
 
 @admin.register(Ingredient)
