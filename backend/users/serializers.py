@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 
+from api.pagination import FoodPagination
 from core.constants import (ERR_SUB_YOUSELF,
                             ERR_ALREADY_SUB,
                             ERR_SUB_ALL)
@@ -56,6 +57,9 @@ class SubscribeSerializer(FoodUserSerializer):
 
     recipes = SerializerMethodField()
     recipes_count = SerializerMethodField()
+    queryset = User.objects.all()
+    serializer_class = FoodUserSerializer
+    pagination_class = FoodPagination
 
     class Meta:
         model = User
