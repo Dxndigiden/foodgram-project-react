@@ -34,10 +34,9 @@ Foodgram - продуктовый помощник с базой кулинар�
     pip install -r requirements.txt
     ```
 
-4. Создайте и примените миграции:
+4. Примените миграции:
 
     ```
-    python manage.py makemigrations
     python manage.py migrate
     ```
 
@@ -98,10 +97,9 @@ DEBUG=False
     docker compose up -d
     ```
 
-6. Создайте и примените миграции:
+6. Примените миграции:
 
     ```
-    docker compose exec -T backend python manage.py makemigrations
     docker compose exec web python manage.py migrate
     ```
 
