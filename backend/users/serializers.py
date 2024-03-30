@@ -55,11 +55,11 @@ class SubscribeSerializer(FoodUserSerializer):
 
     def get_recipes(self, obj):
         limit = self.context['request'].query_params.get('recipes_limit')
-        try:
-            return RecipeShortSerializer(int(obj.recipes.all()[:limit]),
-                                         many=True).data if limit else None
-        except ValueError:
-            return None
+        recipes = (
+            obj.recipes.all()[:int(limit)]
+            if limit is not None else obj.recipes.all()
+        )
+        return RecipeShortSerializer(recipes, many=True).data
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
