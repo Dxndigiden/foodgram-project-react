@@ -1,8 +1,17 @@
+from django.db import IntegrityError
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
+from rest_framework import status
+from rest_framework.decorators import action
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 
+from core.constants import (ERR_SUB_YOUSELF,
+                            ERR_ALREADY_SUB,
+                            ERR_SUB_ALL)
 from .models import User, Subscription
 from recipes.models import Recipe
 
@@ -52,6 +61,40 @@ class SubscribeSerializer(FoodUserSerializer):
         model = User
         fields = ('email', 'id', 'username', 'first_name', 'last_name',
                   'is_subscribed', 'recipes', 'recipes_count', )
+
+    @action(methods=['post', 'delete'], detail=True,
+            permission_classes=[IsAuthenticated])
+    def subscribe(self, request, id):
+        user = self.request.user
+        author = get_object_or_404(User, id=id)
+
+        try:
+            if request.method == 'POST':
+                if user == author:
+                    data = {'errors': ERR_SUB_YOUSELF}
+                    return Response(data=data,
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+                Subscription.objects.create(user=user, author=author)
+                serializer = SubscribeSerializer(author,
+                                                 context={'request': request})
+                return Response(serializer.data,
+                                status=status.HTTP_201_CREATED)
+
+            elif request.method == 'DELETE':
+                subscribe = Subscription.objects.filter(user=user,
+                                                        author=author)
+                if subscribe.exists():
+                    subscribe.delete()
+                    return Response(status=status.HTTP_204_NO_CONTENT)
+                else:
+                    data = {'errors': ERR_SUB_ALL}
+                    return Response(data=data,
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+        except IntegrityError:
+            data = {'errors': ERR_ALREADY_SUB}
+            return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
 
     def get_recipes(self, obj):
         limit = self.context['request'].query_params.get('recipes_limit')
