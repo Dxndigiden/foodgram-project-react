@@ -1,10 +1,8 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
-from drf_extra_fields.fields import Base64ImageField
 from rest_framework.fields import SerializerMethodField
-from rest_framework.serializers import ModelSerializer
 
 from .models import User
-from recipes.models import Recipe
+from api.serializers import RecipeShortSerializer
 
 
 class FoodUserCreateSerializer(UserCreateSerializer):
@@ -30,16 +28,6 @@ class FoodUserSerializer(UserSerializer):
         return (not user.is_anonymous
                 and obj.following.filter(
                     user=user).exists())
-
-
-class RecipeShortSerializer(ModelSerializer):
-    """Сериализатор краткого представления"""
-
-    image = Base64ImageField()
-
-    class Meta:
-        model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
 
 
 class SubscribeSerializer(FoodUserSerializer):

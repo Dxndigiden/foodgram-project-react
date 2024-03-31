@@ -21,7 +21,7 @@ from .serializers import (IngredientSerializer,
                           TagSerializer)
 from api.pagination import FoodPagination
 from users.permissions import IsAdminOrAuthorOrReadOnly
-from users.serializers import RecipeShortSerializer
+from api.serializers import RecipeShortSerializer
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
