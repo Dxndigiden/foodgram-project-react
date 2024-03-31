@@ -1,6 +1,7 @@
 import re
 
 from django.db import transaction, models
+from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import IntegerField, SerializerMethodField
@@ -8,14 +9,11 @@ from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
 
 from core.constants import (NOT_AMOUNT_MESSAGE,
-                            MIN_AMOUNT_TIME_OR_INGR,
+                            NOT_REPEAT_MESSAGE,
                             MIN_AMOUNT_MESSAGE,
                             MIN_TAG_MESSAGE,
-                            MAX_AMOUNT_INGR,
                             UNIQUE_TAG_MESSAGE,
-                            VALIDATE_NAME_MESSAGE,
-                            MAX_INGR_MESSAGE,
-                            MIN_TIME_MESSAGE)
+                            VALIDATE_NAME_MESSAGE)
 from recipes.models import Ingredient, Recipe, Tag, IngredientInRecipe
 from users.serializers import FoodUserSerializer
 
@@ -41,7 +39,7 @@ class RecipeReadSerializer(ModelSerializer):
 
     tags = TagSerializer(many=True, read_only=True)
     author = FoodUserSerializer(read_only=True)
-    ingredients = IngredientSerializer(many=True, read_only=True)
+    ingredients = SerializerMethodField()
     image = SerializerMethodField('get_image_url')
     is_favorited = SerializerMethodField(read_only=True)
     is_in_shopping_cart = SerializerMethodField(read_only=True)
@@ -88,20 +86,25 @@ class RecipeReadSerializer(ModelSerializer):
 class IngredientInRecipeWriteSerializer(ModelSerializer):
     """Сериализатор ингредиента в рецепте"""
 
-    id = PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
-    ingredients = IntegerField()
+    id = IntegerField(write_only=True)
 
     class Meta:
         model = IngredientInRecipe
-        fields = ('id', 'ingredients')
+        fields = ('id', 'amount')
 
     def validate_ingredients(self, value):
-        if not value:
+        ingredients = value
+        if not ingredients:
             raise ValidationError(NOT_AMOUNT_MESSAGE)
-        if value < MIN_AMOUNT_TIME_OR_INGR:
-            raise ValidationError(MIN_AMOUNT_MESSAGE)
-        if value >= MAX_AMOUNT_INGR:
-            raise ValidationError(MAX_INGR_MESSAGE)
+
+        ingredients_list = []
+        for item in ingredients:
+            ingredient = get_object_or_404(Ingredient, id=item['id'])
+            if ingredient in ingredients_list:
+                raise ValidationError(NOT_REPEAT_MESSAGE)
+            if int(item['amount']) <= 0:
+                raise ValidationError(MIN_AMOUNT_MESSAGE)
+            ingredients_list.append(ingredient)
         return value
 
 
@@ -127,11 +130,6 @@ class RecipeWriteSerializer(ModelSerializer):
             'cooking_time',
         )
 
-    def validate_cooking_time(self, value):
-        if value <= MIN_AMOUNT_TIME_OR_INGR:
-            raise ValidationError(MIN_TIME_MESSAGE)
-        return value
-
     def validate_tags(self, value):
         tags = value
         if not tags:
@@ -148,9 +146,11 @@ class RecipeWriteSerializer(ModelSerializer):
             raise ValidationError(VALIDATE_NAME_MESSAGE)
         return value
 
+    @transaction.atomic
     def create_ingredients_amounts(self, ingredients, recipe):
         IngredientInRecipe.objects.bulk_create(
             [IngredientInRecipe(
+                ingredient=Ingredient.objects.get(id=ingredient['id']),
                 recipe=recipe,
                 amount=ingredient['amount']
             ) for ingredient in ingredients]
