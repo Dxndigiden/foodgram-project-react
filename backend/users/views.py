@@ -10,7 +10,8 @@ from rest_framework.status import (HTTP_200_OK, HTTP_401_UNAUTHORIZED)
 from users.models import User, Subscription
 
 from core.constants import (ERR_ALREADY_SUB,
-                            ERR_NOT_FOUND)
+                            ERR_NOT_FOUND,
+                            ERR_SUB_ALL)
 from api.pagination import FoodPagination
 from .serializers import (FoodUserSerializer,
                           SubscribeSerializer)
@@ -52,24 +53,28 @@ class FoodUserViewSet(UserViewSet):
     @action(methods=['post', 'delete'], detail=True,
             permission_classes=[IsAuthenticated])
     def subscribe(self, request, id):
-        user = self.request.user.id
-        author = get_object_or_404(User, id=id).id
+        user = self.request.user
+        author = get_object_or_404(User, id=id)
 
         try:
             if request.method == 'POST':
                 serializer = SubscribeSerializer(author,
                                                  context={'request': request})
                 serializer.is_valid(raise_exception=True)
-
-                return Response(serializer.serializer.save(),
+                data = serializer.save()
+                return Response(serializer.data,
                                 status=status.HTTP_201_CREATED)
 
-            subscribe = get_object_or_404(
-                Subscription, user=user,
-                author=author
-            )
-            subscribe.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            elif request.method == 'DELETE':
+                subscribe = Subscription.objects.filter(user=user,
+                                                        author=author)
+                if subscribe.exists():
+                    subscribe.delete()
+                    return Response(status=status.HTTP_204_NO_CONTENT)
+                else:
+                    data = {'errors': ERR_SUB_ALL}
+                    return Response(data=data,
+                                    status=status.HTTP_400_BAD_REQUEST)
 
         except IntegrityError:
             data = {'errors': ERR_ALREADY_SUB}
