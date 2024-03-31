@@ -9,7 +9,8 @@ from rest_framework.response import Response
 from rest_framework.status import (HTTP_200_OK, HTTP_401_UNAUTHORIZED)
 from users.models import User, Subscription
 
-from core.constants import (ERR_ALREADY_SUB,
+from core.constants import (ERR_SUB_YOUSELF,
+                            ERR_ALREADY_SUB,
                             ERR_NOT_FOUND,
                             ERR_SUB_ALL)
 from api.pagination import FoodPagination
@@ -58,10 +59,14 @@ class FoodUserViewSet(UserViewSet):
 
         try:
             if request.method == 'POST':
+                if user == author:
+                    data = {'errors': ERR_SUB_YOUSELF}
+                    return Response(data=data,
+                                    status=status.HTTP_400_BAD_REQUEST)
+
                 serializer = SubscribeSerializer(author,
                                                  context={'request': request})
-                serializer.is_valid(raise_exception=True)
-                data = serializer.save()
+                serializer.save()
                 return Response(serializer.data,
                                 status=status.HTTP_201_CREATED)
 
