@@ -1,8 +1,12 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework.fields import SerializerMethodField
+from rest_framework.serializers import (Serializer,
+                                        PrimaryKeyRelatedField,
+                                        ValidationError)
 
-from .models import User
+from .models import User, Subscription
 from api.serializers import RecipeShortSerializer
+from core.constants import ERR_SUB_ALL, ERR_SUB_YOUSELF
 
 
 class FoodUserCreateSerializer(UserCreateSerializer):
@@ -51,3 +55,32 @@ class SubscribeSerializer(FoodUserSerializer):
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
+
+
+class SubscribeAddSerializer(Serializer):
+    """Сериализатор создания подписки"""
+
+    user = PrimaryKeyRelatedField(read_only=True)
+    author = PrimaryKeyRelatedField(
+        queryset=User.objects.all()
+    )
+
+    class Meta:
+        model = Subscription
+        fields = ('user', 'author')
+
+    def validate(self, data):
+        user = self.context['request'].user
+        author = data['author']
+        if self.context['request'].method == 'POST':
+            if user == author:
+                raise ValidationError(ERR_SUB_YOUSELF)
+        elif self.context['request'].method == 'DELETE':
+            try:
+                Subscription.objects.get(user=user, author=author)
+            except Subscription.DoesNotExist:
+                raise ValidationError(ERR_SUB_ALL)
+        return data
+
+    def create(self, data):
+        return Subscription.objects.create(data)
