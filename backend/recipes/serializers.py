@@ -1,7 +1,6 @@
 import re
 
 from django.db import transaction, models
-from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import IntegerField, SerializerMethodField
@@ -9,11 +8,13 @@ from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
 
 from core.constants import (NOT_AMOUNT_MESSAGE,
-                            NOT_REPEAT_MESSAGE,
+                            MIN_AMOUNT_TIME_OR_INGR,
                             MIN_AMOUNT_MESSAGE,
                             MIN_TAG_MESSAGE,
+                            MAX_AMOUNT_INGR,
                             UNIQUE_TAG_MESSAGE,
-                            VALIDATE_NAME_MESSAGE)
+                            VALIDATE_NAME_MESSAGE,
+                            MAX_INGR_MESSAGE)
 from recipes.models import Ingredient, Recipe, Tag, IngredientInRecipe
 from users.serializers import FoodUserSerializer
 
@@ -86,25 +87,20 @@ class RecipeReadSerializer(ModelSerializer):
 class IngredientInRecipeWriteSerializer(ModelSerializer):
     """Сериализатор ингредиента в рецепте"""
 
-    id = IntegerField(write_only=True)
+    id = PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
+    ingredients = IntegerField()
 
     class Meta:
         model = IngredientInRecipe
         fields = ('id', 'amount')
 
     def validate_ingredients(self, value):
-        ingredients = value
-        if not ingredients:
+        if not value:
             raise ValidationError(NOT_AMOUNT_MESSAGE)
-
-        ingredients_list = []
-        for item in ingredients:
-            ingredient = get_object_or_404(Ingredient, id=item['id'])
-            if ingredient in ingredients_list:
-                raise ValidationError(NOT_REPEAT_MESSAGE)
-            if int(item['amount']) <= 0:
-                raise ValidationError(MIN_AMOUNT_MESSAGE)
-            ingredients_list.append(ingredient)
+        if value < MIN_AMOUNT_TIME_OR_INGR:
+            raise ValidationError(MIN_AMOUNT_MESSAGE)
+        if value >= MAX_AMOUNT_INGR:
+            raise ValidationError(MAX_INGR_MESSAGE)
         return value
 
 
