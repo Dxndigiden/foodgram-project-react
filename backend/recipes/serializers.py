@@ -126,12 +126,12 @@ class RecipeWriteSerializer(ModelSerializer):
             'text',
             'cooking_time',
         )
-    
+
     def validate_cooking_time(self, value):
         if value <= MIN_AMOUNT_TIME_OR_INGR:
             raise ValidationError(MIN_TIME_MESSAGE)
         return value
-    
+
     def validate_tags(self, value):
         tags = value
         if not tags:
