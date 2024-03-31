@@ -92,7 +92,7 @@ class IngredientInRecipeWriteSerializer(ModelSerializer):
 
     class Meta:
         model = IngredientInRecipe
-        fields = ('id', 'amount')
+        fields = ('id', 'ingredients')
 
     def validate_ingredients(self, value):
         if not value:
