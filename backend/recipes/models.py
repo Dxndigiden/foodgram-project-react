@@ -1,17 +1,9 @@
 from colorfield.fields import ColorField
-from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from core.constants import (
     MAX_LENGTH_NAME,
     MAX_LENGTH_COLOR,
-    MIN_TIME_MESSAGE,
-    MAX_TIME_MESSAGE,
-    MIN_INGR_MESSAGE,
-    MAX_INGR_MESSAGE,
-    MIN_AMOUNT_TIME_OR_INGR,
-    MAX_AMOUNT_TIME,
-    MAX_AMOUNT_INGR
 )
 from users.models import User
 
