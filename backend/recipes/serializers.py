@@ -14,7 +14,8 @@ from core.constants import (NOT_AMOUNT_MESSAGE,
                             MAX_AMOUNT_INGR,
                             UNIQUE_TAG_MESSAGE,
                             VALIDATE_NAME_MESSAGE,
-                            MAX_INGR_MESSAGE)
+                            MAX_INGR_MESSAGE,
+                            MIN_TIME_MESSAGE)
 from recipes.models import Ingredient, Recipe, Tag, IngredientInRecipe
 from users.serializers import FoodUserSerializer
 
@@ -125,7 +126,12 @@ class RecipeWriteSerializer(ModelSerializer):
             'text',
             'cooking_time',
         )
-
+    
+    def validate_cooking_time(self, value):
+        if value <= MIN_AMOUNT_TIME_OR_INGR:
+            raise ValidationError(MIN_TIME_MESSAGE)
+        return value
+    
     def validate_tags(self, value):
         tags = value
         if not tags:
@@ -142,11 +148,9 @@ class RecipeWriteSerializer(ModelSerializer):
             raise ValidationError(VALIDATE_NAME_MESSAGE)
         return value
 
-    @transaction.atomic
     def create_ingredients_amounts(self, ingredients, recipe):
         IngredientInRecipe.objects.bulk_create(
             [IngredientInRecipe(
-                ingredient=Ingredient.objects.get(id=ingredient['id']),
                 recipe=recipe,
                 amount=ingredient['amount']
             ) for ingredient in ingredients]
