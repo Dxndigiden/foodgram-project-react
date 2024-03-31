@@ -34,37 +34,12 @@ class TagSerializer(ModelSerializer):
         fields = '__all__'
 
 
-class IngredientInRecipeWriteSerializer(ModelSerializer):
-    """Сериализатор ингредиента в рецепте"""
-
-    id = IntegerField(write_only=True)
-
-    class Meta:
-        model = IngredientInRecipe
-        fields = ('id', 'amount')
-
-    def validate_ingredients(self, value):
-        ingredients = value
-        if not ingredients:
-            raise ValidationError(NOT_AMOUNT_MESSAGE)
-
-        ingredients_list = []
-        for item in ingredients:
-            ingredient = get_object_or_404(Ingredient, id=item['id'])
-            if ingredient in ingredients_list:
-                raise ValidationError(NOT_REPEAT_MESSAGE)
-            if int(item['amount']) <= 0:
-                raise ValidationError(MIN_AMOUNT_MESSAGE)
-            ingredients_list.append(ingredient)
-        return value
-
-
 class RecipeReadSerializer(ModelSerializer):
     """Сериализатор чтения рецепта"""
 
     tags = TagSerializer(many=True, read_only=True)
     author = FoodUserSerializer(read_only=True)
-    ingredients = IngredientInRecipeWriteSerializer(many=True)
+    ingredients = SerializerMethodField()
     image = SerializerMethodField('get_image_url')
     is_favorited = SerializerMethodField(read_only=True)
     is_in_shopping_cart = SerializerMethodField(read_only=True)
@@ -106,6 +81,31 @@ class RecipeReadSerializer(ModelSerializer):
     def get_is_in_shopping_cart(self, obj):
         user = self.context.get('request').user
         return user.shopping_cart.filter(recipe=obj).exists()
+
+
+class IngredientInRecipeWriteSerializer(ModelSerializer):
+    """Сериализатор ингредиента в рецепте"""
+
+    id = IntegerField(write_only=True)
+
+    class Meta:
+        model = IngredientInRecipe
+        fields = ('id', 'amount')
+
+    def validate_ingredients(self, value):
+        ingredients = value
+        if not ingredients:
+            raise ValidationError(NOT_AMOUNT_MESSAGE)
+
+        ingredients_list = []
+        for item in ingredients:
+            ingredient = get_object_or_404(Ingredient, id=item['id'])
+            if ingredient in ingredients_list:
+                raise ValidationError(NOT_REPEAT_MESSAGE)
+            if int(item['amount']) <= 0:
+                raise ValidationError(MIN_AMOUNT_MESSAGE)
+            ingredients_list.append(ingredient)
+        return value
 
 
 class RecipeWriteSerializer(ModelSerializer):
