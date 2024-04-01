@@ -83,4 +83,4 @@ class SubscribeAddSerializer(Serializer):
         return data
 
     def create(self, data):
-        return Subscription.objects.create(data)
+        return Subscription.objects.create(**data)

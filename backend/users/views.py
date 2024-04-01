@@ -11,7 +11,8 @@ from users.models import User, Subscription
 from core.constants import ERR_NOT_FOUND
 from api.pagination import FoodPagination
 from .serializers import (FoodUserSerializer,
-                          SubscribeSerializer)
+                          SubscribeSerializer,
+                          SubscribeAddSerializer)
 
 
 class FoodUserViewSet(UserViewSet):
@@ -49,15 +50,15 @@ class FoodUserViewSet(UserViewSet):
 
     @action(methods=['post', 'delete'], detail=True,
             permission_classes=[IsAuthenticated])
-    def subscribe(self, request, id):
-        author = get_object_or_404(User, id=id)
-        serializer = SubscribeSerializer(
+    def subscribe(self, request, **kwargs):
+        author = get_object_or_404(User, id=kwargs['pk'])
+        serializer = SubscribeAddSerializer(
             data={'author': author.id},
             context={'request': request})
         serializer.is_valid(raise_exception=True)
         if request.method == 'POST':
             subscribe = serializer.save(user=request.user)
-            return Response(SubscribeSerializer(
+            return Response(SubscribeAddSerializer(
                 subscribe,
                 context={'request': request}).data,
                 status=status.HTTP_201_CREATED)
