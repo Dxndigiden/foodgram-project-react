@@ -1,4 +1,5 @@
 from django.contrib.auth.hashers import make_password
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import status
@@ -8,11 +9,13 @@ from rest_framework.response import Response
 from rest_framework.status import (HTTP_200_OK, HTTP_401_UNAUTHORIZED)
 from users.models import User, Subscription
 
-from core.constants import ERR_NOT_FOUND
+from core.constants import (ERR_SUB_YOUSELF,
+                            ERR_ALREADY_SUB,
+                            ERR_NOT_FOUND,
+                            ERR_SUB_ALL)
 from api.pagination import FoodPagination
 from .serializers import (FoodUserSerializer,
-                          SubscribeSerializer,
-                          SubscribeAddSerializer)
+                          SubscribeSerializer)
 
 
 class FoodUserViewSet(UserViewSet):
@@ -49,25 +52,38 @@ class FoodUserViewSet(UserViewSet):
         return self.get_paginated_response(serializer.data)
 
     @action(methods=['post', 'delete'], detail=True,
-            permission_classes=[IsAuthenticated], url_path='subscribe',
-            url_name='subscribe-unsubscribe')
-    def subscribe(self, request, **kwargs):
-        author = get_object_or_404(User, id=kwargs['pk'])
-        serializer = SubscribeAddSerializer(
-            data={'author': author.id},
-            context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        if request.method == 'POST':
-            subscribe = serializer.save(user=request.user)
-            return Response(SubscribeAddSerializer(
-                subscribe,
-                context={'request': request}).data,
-                status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            subscribe = Subscription.objects.get(
-                user=request.user, author=author)
-            subscribe.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            permission_classes=[IsAuthenticated])
+    def subscribe(self, request, id):
+        user = self.request.user
+        author = get_object_or_404(User, id=id)
+
+        try:
+            if request.method == 'POST':
+                if user == author:
+                    data = {'errors': ERR_SUB_YOUSELF}
+                    return Response(data=data,
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+                Subscription.objects.create(user=user, author=author)
+                serializer = SubscribeSerializer(author,
+                                                 context={'request': request})
+                return Response(serializer.data,
+                                status=status.HTTP_201_CREATED)
+
+            elif request.method == 'DELETE':
+                subscribe = Subscription.objects.filter(user=user,
+                                                        author=author)
+                if subscribe.exists():
+                    subscribe.delete()
+                    return Response(status=status.HTTP_204_NO_CONTENT)
+                else:
+                    data = {'errors': ERR_SUB_ALL}
+                    return Response(data=data,
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+        except IntegrityError:
+            data = {'errors': ERR_ALREADY_SUB}
+            return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
 
     def get_serializer_context(self):
         return {'request': self.request}

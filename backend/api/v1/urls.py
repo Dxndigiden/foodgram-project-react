@@ -15,10 +15,4 @@ urlpatterns = [
     path('', include(router_v1.urls)),
     path('', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
-    path('users/subscribe/', FoodUserViewSet.as_view(
-        {'get': 'subscriptions'}), name='subscriptions-list'),
-    path('users/<int:pk>/subscribe/',
-         FoodUserViewSet.as_view({'post': 'subscribe',
-                                  'delete': 'subscribe'}),
-         name='subscribe-unsubscribe'),
 ]
