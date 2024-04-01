@@ -12,10 +12,6 @@ router_v1.register(r'recipes', RecipeViewSet, basename='recipes')
 
 
 urlpatterns = [
-    path('users/<int:pk>/subscribe/',
-         FoodUserViewSet.as_view({'post': 'subscribtion',
-                                  'delete': 'subscribtion'}),
-         name='subscribe-unsubscribe'),
     path('', include(router_v1.urls)),
     path('', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
