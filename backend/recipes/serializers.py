@@ -13,7 +13,11 @@ from core.constants import (NOT_AMOUNT_MESSAGE,
                             MIN_AMOUNT_MESSAGE,
                             MIN_TAG_MESSAGE,
                             UNIQUE_TAG_MESSAGE,
-                            VALIDATE_NAME_MESSAGE)
+                            VALIDATE_NAME_MESSAGE,
+                            MIN_AMOUNT_TIME_OR_INGR,
+                            MIN_TIME_MESSAGE,
+                            MAX_TIME_MESSAGE,
+                            MAX_AMOUNT_TIME)
 from recipes.models import Ingredient, Recipe, Tag, IngredientInRecipe
 from users.serializers import FoodUserSerializer
 
@@ -93,16 +97,14 @@ class IngredientInRecipeWriteSerializer(ModelSerializer):
         fields = ('id', 'amount')
 
     def validate_ingredients(self, value):
-        ingredients = value
-        if not ingredients:
+        if not value:
             raise ValidationError(NOT_AMOUNT_MESSAGE)
-
         ingredients_list = []
-        for item in ingredients:
+        for item in value:
             ingredient = get_object_or_404(Ingredient, id=item['id'])
             if ingredient in ingredients_list:
                 raise ValidationError(NOT_REPEAT_MESSAGE)
-            if int(item['amount']) <= 0:
+            if item['amount'] <= 0:
                 raise ValidationError(MIN_AMOUNT_MESSAGE)
             ingredients_list.append(ingredient)
         return value
@@ -130,12 +132,18 @@ class RecipeWriteSerializer(ModelSerializer):
             'cooking_time',
         )
 
+    def validate_cooking_time(self, value):
+        if value <= MIN_AMOUNT_TIME_OR_INGR:
+            raise ValidationError(MIN_TIME_MESSAGE)
+        elif value >= MAX_AMOUNT_TIME:
+            raise ValidationError(MAX_TIME_MESSAGE)
+        return value
+
     def validate_tags(self, value):
-        tags = value
-        if not tags:
+        if not value:
             raise ValidationError(MIN_TAG_MESSAGE)
         tags_list = []
-        for tag in tags:
+        for tag in value:
             if tag in tags_list:
                 raise ValidationError(UNIQUE_TAG_MESSAGE)
             tags_list.append(tag)
