@@ -56,20 +56,19 @@ class FoodUserViewSet(UserViewSet):
     def subscribe(self, request, id):
         user = self.request.user
         author = get_object_or_404(User, id=id)
-
+        serializer = SubscribeSerializer(author,
+                                         context={'request': request})
+        serializer.is_valid(raise_exception=True)
         try:
             if request.method == 'POST':
                 if user == author:
                     data = {'errors': ERR_SUB_YOUSELF}
                     return Response(data=data,
                                     status=status.HTTP_400_BAD_REQUEST)
-
-                Subscription.objects.create(user=user, author=author)
-                serializer = SubscribeSerializer(author,
-                                                 context={'request': request})
-                return Response(serializer.data,
+                subscribe = serializer.save(user=request.user)
+                return Response(SubscribeSerializer(subscribe,
+                                context={'request': request}).data,
                                 status=status.HTTP_201_CREATED)
-
             elif request.method == 'DELETE':
                 subscribe = Subscription.objects.filter(user=user,
                                                         author=author)
