@@ -53,13 +53,11 @@ class FoodUserViewSet(UserViewSet):
     def subscribe(self, request, id):
         user = request.user.id
         author = get_object_or_404(User, id=id).id
-
         if request.method == 'POST':
             serializer = SubscribeAddSerializer(
-                data={
-                    'user': user,
-                    'author': author,
-                    },
+                data={'user': user,
+                      'author': author,
+                      },
                 context={'request': request}
             )
             serializer.is_valid(raise_exception=True)
