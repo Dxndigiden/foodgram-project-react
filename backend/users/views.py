@@ -61,16 +61,16 @@ class FoodUserViewSet(UserViewSet):
                 context={'request': request}
             )
             serializer.is_valid(raise_exception=True)
-            response_data = serializer.save()
             return Response(
-                {'data': response_data},
+                {'data': serializer.save()},
                 status=status.HTTP_201_CREATED,
             )
-        subscribe = get_object_or_404(Subscription,
-                                      user=user,
-                                      author=author)
-        subscribe.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        if request.method == 'DELETE':
+            subscribe = get_object_or_404(Subscription,
+                                          user=user,
+                                          author=author)
+            subscribe.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_serializer_context(self):
         return {'request': self.request}
