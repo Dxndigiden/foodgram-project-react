@@ -68,7 +68,7 @@ class SubscribeAddSerializer(ModelSerializer):
         user = data['user']
         author = data['author']
         Subscription.objects.create(user=user, author=author)
-        return {'success': True}
+        return True
 
     def validate_sub(self, obj):
         user = obj.get('user')

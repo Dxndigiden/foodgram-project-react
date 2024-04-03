@@ -1,8 +1,7 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
 from django.db import models
 
-from core.constants import MAX_LENGTH_NAME, MAX_LENGTH_EMAIL, ERR_SUB_YOUSELF
+from core.constants import MAX_LENGTH_NAME, MAX_LENGTH_EMAIL
 
 
 class User(AbstractUser):
@@ -68,11 +67,6 @@ class Subscription(models.Model):
             ),
         ]
         ordering = ('id',)
-
-    def full_clean(self, *args, **kwargs):
-        super().full_clean(*args, **kwargs)
-        if self.user == self.author:
-            raise ValidationError(ERR_SUB_YOUSELF)
 
     def __str__(self):
         return f'{self.user} подписан на {self.author}'
