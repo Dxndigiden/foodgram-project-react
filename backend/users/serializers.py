@@ -67,14 +67,12 @@ class SubscribeAddSerializer(ModelSerializer):
     def subscribe(self, data):
         user = data['user']
         author = data['author']
-
         Subscription.objects.create(user=user, author=author)
-        return True
+        return {'success': True}
 
     def validate_sub(self, obj):
         user = obj.get('user')
         author = obj.get('author')
-
         if user.following.filter(author=author).exists():
             raise ValidationError(ERR_ALREADY_SUB)
         if user == author:
