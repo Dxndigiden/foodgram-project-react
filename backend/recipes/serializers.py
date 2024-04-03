@@ -1,6 +1,7 @@
 import re
 
 from django.db import transaction, models
+from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import IntegerField, SerializerMethodField
@@ -15,8 +16,17 @@ from core.constants import (NOT_AMOUNT_MESSAGE,
                             MIN_AMOUNT_TIME_OR_INGR,
                             MIN_TIME_MESSAGE,
                             MAX_TIME_MESSAGE,
-                            MAX_AMOUNT_TIME)
-from recipes.models import Ingredient, Recipe, Tag, IngredientInRecipe
+                            MAX_AMOUNT_TIME,
+                            MAX_INGR_MESSAGE,
+                            MAX_AMOUNT_INGR,
+                            ERR_ALREADY_RECIPE)
+from recipes.models import (Ingredient,
+                            Recipe,
+                            Tag,
+                            IngredientInRecipe,
+                            Favorite,
+                            ShoppingCart)
+from users.models import User
 from users.serializers import FoodUserSerializer
 
 
@@ -102,6 +112,8 @@ class IngredientInRecipeWriteSerializer(ModelSerializer):
             raise ValidationError(NOT_AMOUNT_MESSAGE)
         if value < MIN_AMOUNT_TIME_OR_INGR:
             raise ValidationError(MIN_AMOUNT_MESSAGE)
+        if value <= MAX_AMOUNT_INGR:
+            raise ValidationError(MAX_INGR_MESSAGE)
         return value
 
 
@@ -186,3 +198,59 @@ class RecipeWriteSerializer(ModelSerializer):
         context = {'request': request}
         return RecipeReadSerializer(instance,
                                     context=context).data
+
+
+class FavoriteAddSerializer(ModelSerializer):
+    """Сериализатор добавления в избранное"""
+    recipe = PrimaryKeyRelatedField(queryset=Recipe.objects.all())
+    user = PrimaryKeyRelatedField(queryset=User.objects.all())
+
+    class Meta:
+        model = Favorite
+        fields = ('user', 'recipe')
+
+    def validate_faworite(self, data):
+        user = data['user']
+        recipe = data['recipe']
+        if Favorite.objects.filter(user=user, recipe=recipe).exists():
+            raise ValidationError(ERR_ALREADY_RECIPE)
+        return data
+
+    def create(self, validated_data):
+        recipe = validated_data['recipe']
+        user = validated_data['user']
+        return Favorite.objects.create(user=user, recipe=recipe)
+
+    def delete(self, data):
+        user = data['user']
+        recipe = data['recipe']
+        return get_object_or_404(Favorite, user=user,
+                                 recipe=recipe).delete()
+
+
+class ShoppingCartAddSerializer(ModelSerializer):
+    """Сериализатор добавления в избранное"""
+    recipe = PrimaryKeyRelatedField(queryset=Recipe.objects.all())
+    user = PrimaryKeyRelatedField(queryset=User.objects.all())
+
+    class Meta:
+        model = ShoppingCart
+        fields = ('user', 'recipe')
+
+    def validate_shoppingcart(self, data):
+        user = data['user']
+        recipe = data['recipe']
+        if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
+            raise ValidationError(ERR_ALREADY_RECIPE)
+        return data
+
+    def create(self, validated_data):
+        recipe = validated_data['recipe']
+        user = validated_data['user']
+        return ShoppingCart.objects.create(user=user, recipe=recipe)
+
+    def delete(self, data):
+        user = data['user']
+        recipe = data['recipe']
+        return get_object_or_404(ShoppingCart, user=user,
+                                 recipe=recipe).delete()

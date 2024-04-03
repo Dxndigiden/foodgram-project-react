@@ -4,24 +4,25 @@ from django.db import models
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from recipes.models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
-                            ShoppingCart, Tag)
-from rest_framework import status
+from recipes.models import (Ingredient, IngredientInRecipe,
+                            Recipe, Tag)
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework.status import (HTTP_400_BAD_REQUEST,
+                                   HTTP_204_NO_CONTENT,
+                                   HTTP_201_CREATED)
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from core.constants import ERR_ALREADY_RECIPE, ERR_DEL_RECIPE
 from .filters import IngredientFilter, RecipeFilter
 from .serializers import (IngredientSerializer,
                           RecipeReadSerializer,
                           RecipeWriteSerializer,
-                          TagSerializer)
+                          TagSerializer,
+                          FavoriteAddSerializer,
+                          ShoppingCartAddSerializer)
 from api.pagination import FoodPagination
 from users.permissions import IsAdminOrAuthorOrReadOnly
-from api.serializers import RecipeShortSerializer
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
@@ -65,10 +66,20 @@ class RecipeViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def favorite(self, request, pk):
+        recipe = get_object_or_404(Recipe, pk=pk).pk
+        user = request.user.pk
+        data = {
+            'user': user,
+            'recipe': recipe,
+        }
+        serializer = FavoriteAddSerializer(data=data,
+                                           context={'request': request})
         if request.method == 'POST':
-            return self.add_to(Favorite, request.user, pk)
-        else:
-            return self.delete_from(Favorite, request.user, pk)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=HTTP_201_CREATED)
+        return Response(serializer.delete(data),
+                        status=HTTP_204_NO_CONTENT)
 
     @action(
         detail=True,
@@ -76,27 +87,20 @@ class RecipeViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def shopping_cart(self, request, pk):
+        recipe = get_object_or_404(Recipe, pk=pk).pk
+        user = request.user.pk
+        data = {
+            'user': user,
+            'recipe': recipe,
+        }
+        serializer = ShoppingCartAddSerializer(data=data,
+                                               context={'request': request})
         if request.method == 'POST':
-            return self.add_to(ShoppingCart, request.user, pk)
-        else:
-            return self.delete_from(ShoppingCart, request.user, pk)
-
-    def add_to(self, model, user, pk):
-        if model.objects.filter(user=user, recipe__id=pk).exists():
-            return Response({'errors': ERR_ALREADY_RECIPE},
-                            status=status.HTTP_400_BAD_REQUEST)
-        recipe = get_object_or_404(Recipe, id=pk)
-        model.objects.create(user=user, recipe=recipe)
-        serializer = RecipeShortSerializer(recipe)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def delete_from(self, model, user, pk):
-        obj = model.objects.filter(user=user, recipe__id=pk)
-        if obj.exists():
-            obj.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response({'errors': ERR_DEL_RECIPE},
-                        status=status.HTTP_400_BAD_REQUEST)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=HTTP_201_CREATED)
+        return Response(serializer.delete(data),
+                        status=HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,
@@ -130,5 +134,4 @@ class RecipeViewSet(ModelViewSet):
         filename = f'{user.username}_shopping_list.txt'
         response = HttpResponse(shopping_list, content_type='text/plain')
         response['Content-Disposition'] = f'attachment; filename={filename}'
-
         return response

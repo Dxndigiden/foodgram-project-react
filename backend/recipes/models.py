@@ -1,15 +1,7 @@
 from colorfield.fields import ColorField
-from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from core.constants import (
-    MAX_LENGTH_NAME,
-    MAX_LENGTH_COLOR,
-    MIN_INGR_MESSAGE,
-    MAX_INGR_MESSAGE,
-    MIN_AMOUNT_TIME_OR_INGR,
-    MAX_AMOUNT_INGR
-)
+from core.constants import MAX_LENGTH_NAME, MAX_LENGTH_COLOR
 from users.models import User
 
 
@@ -121,11 +113,6 @@ class IngredientInRecipe(models.Model):
     )
     amount = models.PositiveSmallIntegerField(
         'Количество',
-        validators=[
-            MinValueValidator(MIN_AMOUNT_TIME_OR_INGR,
-                              message=MIN_INGR_MESSAGE),
-            MaxValueValidator(MAX_AMOUNT_INGR, message=MAX_INGR_MESSAGE)
-        ]
     )
 
     class Meta:
