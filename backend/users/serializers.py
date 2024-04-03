@@ -1,8 +1,8 @@
 from djoser.serializers import (UserCreateSerializer,
                                 UserSerializer,
-                                ModelSerializer,
                                 ValidationError)
 from rest_framework.fields import SerializerMethodField
+from rest_framework.serializers import ModelSerializer
 
 from .models import User, Subscription
 from api.serializers import RecipeShortSerializer
