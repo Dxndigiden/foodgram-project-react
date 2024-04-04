@@ -6,8 +6,7 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.relations import PrimaryKeyRelatedField
-from rest_framework.serializers import ModelSerializer, ReadOnlyField
-
+from rest_framework.serializers import ModelSerializer
 from core.constants import (NOT_AMOUNT_MESSAGE,
                             MIN_AMOUNT_MESSAGE,
                             MIN_TAG_MESSAGE,
