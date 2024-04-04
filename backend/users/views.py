@@ -85,9 +85,8 @@ class FoodUserViewSet(UserViewSet):
                 context=self.get_serializer_context()
             )
             return Response(serializer.data, status=HTTP_200_OK)
-        else:
-            return Response({'detail': ERR_NOT_FOUND},
-                            status=HTTP_401_UNAUTHORIZED)
+        return Response({'detail': ERR_NOT_FOUND},
+                        status=HTTP_401_UNAUTHORIZED)
 
     @me.mapping.post
     def me_post(self, request):
