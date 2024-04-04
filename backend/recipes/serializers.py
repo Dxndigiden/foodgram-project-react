@@ -25,6 +25,7 @@ from recipes.models import (Ingredient,
                             IngredientInRecipe,
                             Favorite,
                             ShoppingCart)
+from .recipeshort_serializers import RecipeShortSerializer
 from users.models import User
 from users.serializers import FoodUserSerializer
 
@@ -208,6 +209,8 @@ class FavoriteAddSerializer(ModelSerializer):
     class Meta:
         model = Favorite
         fields = ('user', 'recipe')
+        item_model = Recipe
+        item_serializer = RecipeShortSerializer
 
     def validate_faworite(self, data):
         user = data['user']
@@ -236,6 +239,8 @@ class ShoppingCartAddSerializer(ModelSerializer):
     class Meta:
         model = ShoppingCart
         fields = ('user', 'recipe')
+        item_model = Recipe
+        item_serializer = RecipeShortSerializer
 
     def validate_shoppingcart(self, data):
         user = data['user']
