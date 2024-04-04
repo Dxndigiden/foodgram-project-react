@@ -46,24 +46,12 @@ class TagSerializer(ModelSerializer):
         fields = '__all__'
 
 
-class IngredientInRecipeReadSerializer(ModelSerializer):
-    """Сериализатор чтения рецепта"""
-
-    name = ReadOnlyField()
-    id = IntegerField()
-    measurement_unit = ReadOnlyField()
-
-    class Meta:
-        model = IngredientInRecipe
-        fields = ('id', 'name', 'measurement_unit', 'amount')
-
-
 class RecipeReadSerializer(ModelSerializer):
     """Сериализатор чтения рецепта"""
 
     tags = TagSerializer(many=True, read_only=True)
     author = FoodUserSerializer(read_only=True)
-    ingredients = IngredientInRecipeReadSerializer(read_only=True)
+    ingredients = IngredientSerializer(read_only=True)
     image = SerializerMethodField('get_image_url')
     is_favorited = SerializerMethodField(read_only=True)
     is_in_shopping_cart = SerializerMethodField(read_only=True)
@@ -99,27 +87,29 @@ class RecipeReadSerializer(ModelSerializer):
         return ingredients
 
     def get_is_favorited(self, obj):
-        user = self.context.get('request').user
-        if not user.is_anonymous:
-            return user.favorites.filter(recipe=obj).exists()
+        request = self.context.get('request')
+        user = request.user if request else None
+        return (user and not user.is_anonymous
+                and user.favorites.filter(recipe=obj).exists())
 
     def get_is_in_shopping_cart(self, obj):
-        user = self.context.get('request').user
-        if not user.is_anonymous:
-            return user.shopping_cart.filter(recipe=obj).exists()
+        request = self.context.get('request')
+        user = request.user if request else None
+        return (user and not user.is_anonymous
+                and user.shopping_cart.filter(recipe=obj).exists())
 
 
 class IngredientInRecipeWriteSerializer(ModelSerializer):
     """Сериализатор добавления ингредиента в рецепт"""
 
     id = PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
-    ingredients = IntegerField()
+    ingr_amount = IntegerField()
 
     class Meta:
         model = Ingredient
-        fields = ('id', 'ingredients')
+        fields = ('id', 'ingr_amount')
 
-    def validate_ingredients(self, value):
+    def validate_ingr_amount(self, value):
         if not value:
             raise ValidationError(NOT_AMOUNT_MESSAGE)
         if value < MIN_AMOUNT_TIME_OR_INGR:
@@ -154,7 +144,7 @@ class RecipeWriteSerializer(ModelSerializer):
     def validate_cooking_time(self, value):
         if value <= MIN_AMOUNT_TIME_OR_INGR:
             raise ValidationError(MIN_TIME_MESSAGE)
-        elif value >= MAX_AMOUNT_TIME:
+        if value >= MAX_AMOUNT_TIME:
             raise ValidationError(MAX_TIME_MESSAGE)
         return value
 
@@ -195,7 +185,6 @@ class RecipeWriteSerializer(ModelSerializer):
     def update(self, instance, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
-        self.validate_name(validated_data.get('name', ''))
         instance = super().update(instance, validated_data)
         instance.tags.clear()
         instance.tags.set(tags)
