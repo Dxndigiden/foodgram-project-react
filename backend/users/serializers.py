@@ -5,7 +5,7 @@ from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
 
 from .models import User, Subscription
-from api.serializers import RecipeShortSerializer
+from recipes.recipeshort_serializers import RecipeShortSerializer
 from core.constants import ERR_SUB_YOUSELF, ERR_ALREADY_SUB
 
 

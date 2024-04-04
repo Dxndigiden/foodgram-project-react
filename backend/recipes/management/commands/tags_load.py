@@ -22,3 +22,4 @@ class Command(BaseCommand):
 
             Tag.objects.bulk_create(tags_to_create)
             logger.info('Теги успешно подгружены!')
+# Ингридиенты загружаются в скрипте Workflow через loaddata

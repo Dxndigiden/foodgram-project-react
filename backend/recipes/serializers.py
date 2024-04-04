@@ -6,7 +6,7 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.relations import PrimaryKeyRelatedField
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, ReadOnlyField
 
 from core.constants import (NOT_AMOUNT_MESSAGE,
                             MIN_AMOUNT_MESSAGE,
@@ -46,12 +46,24 @@ class TagSerializer(ModelSerializer):
         fields = '__all__'
 
 
+class IngredientInRecipeReadSerializer(ModelSerializer):
+    """Сериализатор чтения рецепта"""
+
+    name = ReadOnlyField()
+    id = IntegerField()
+    measurement_unit = ReadOnlyField()
+
+    class Meta:
+        model = IngredientInRecipe
+        fields = ('id', 'name', 'measurement_unit', 'amount')
+
+
 class RecipeReadSerializer(ModelSerializer):
     """Сериализатор чтения рецепта"""
 
     tags = TagSerializer(many=True, read_only=True)
     author = FoodUserSerializer(read_only=True)
-    ingredients = SerializerMethodField()
+    ingredients = IngredientInRecipeReadSerializer(read_only=True)
     image = SerializerMethodField('get_image_url')
     is_favorited = SerializerMethodField(read_only=True)
     is_in_shopping_cart = SerializerMethodField(read_only=True)
@@ -98,7 +110,7 @@ class RecipeReadSerializer(ModelSerializer):
 
 
 class IngredientInRecipeWriteSerializer(ModelSerializer):
-    """Сериализатор ингредиента в рецепте"""
+    """Сериализатор добавления ингредиента в рецепт"""
 
     id = PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
     ingredients = IntegerField()
