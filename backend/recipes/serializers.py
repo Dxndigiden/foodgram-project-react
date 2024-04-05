@@ -1,6 +1,6 @@
 import re
 
-from django.db import transaction, models
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework.exceptions import ValidationError
@@ -25,7 +25,6 @@ from recipes.models import (Ingredient,
                             IngredientInRecipe,
                             Favorite,
                             ShoppingCart)
-from .recipeshort_serializers import RecipeShortSerializer
 from users.models import User
 from users.serializers import FoodUserSerializer
 
@@ -76,16 +75,6 @@ class RecipeReadSerializer(ModelSerializer):
             return obj.image.url
         return None
 
-    def get_ingredients(self, obj):
-        recipe = obj
-        ingredients = recipe.ingredients.values(
-            'id',
-            'name',
-            'measurement_unit',
-            amount=models.F('ingredientinrecipe__amount')
-        )
-        return ingredients
-
     def get_is_favorited(self, obj):
         request = self.context.get('request')
         user = request.user if request else None
@@ -103,13 +92,13 @@ class IngredientInRecipeWriteSerializer(ModelSerializer):
     """Сериализатор добавления ингредиента в рецепт"""
 
     id = PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
-    ingr_amount = IntegerField()
+    amount = IntegerField()
 
     class Meta:
         model = Ingredient
-        fields = ('id', 'ingr_amount')
+        fields = ('id', 'amount')
 
-    def validate_ingr_amount(self, value):
+    def validate_amount(self, value):
         if not value:
             raise ValidationError(NOT_AMOUNT_MESSAGE)
         if value < MIN_AMOUNT_TIME_OR_INGR:
@@ -209,8 +198,6 @@ class FavoriteAddSerializer(ModelSerializer):
     class Meta:
         model = Favorite
         fields = ('user', 'recipe')
-        item_model = Recipe
-        item_serializer = RecipeShortSerializer
 
     def validate_faworite(self, data):
         user = data['user']
@@ -239,8 +226,6 @@ class ShoppingCartAddSerializer(ModelSerializer):
     class Meta:
         model = ShoppingCart
         fields = ('user', 'recipe')
-        item_model = Recipe
-        item_serializer = RecipeShortSerializer
 
     def validate_shoppingcart(self, data):
         user = data['user']
