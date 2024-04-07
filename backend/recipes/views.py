@@ -47,10 +47,10 @@ class RecipeViewSet(ModelViewSet):
     """Вьюсет рецепта"""
 
     queryset = Recipe.objects.select_related('author').prefetch_related(
-            'tags',
-            'ingredients',
-            'shopping_list',
-            'favorites',
+        'tags',
+        'ingredients',
+        'shopping_list',
+        'favorites',
         )
     permission_classes = (IsAdminOrAuthorOrReadOnly,)
     pagination_class = FoodPagination
