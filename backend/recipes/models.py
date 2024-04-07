@@ -23,8 +23,8 @@ class Ingredient(models.Model):
         ordering = ['name']
         constraints = [
             models.UniqueConstraint(fields=['name', 'measurement_unit'],
-                                    name='unique_together')
-                                    ]
+                                    name='unique_ingridient')
+        ]
 
     def __str__(self):
         return f'{self.name} - {self.measurement_unit}'

@@ -1,6 +1,6 @@
 import re
 
-from django.db import transaction
+from django.db import transaction, models
 from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework.exceptions import ValidationError
@@ -74,6 +74,16 @@ class RecipeReadSerializer(ModelSerializer):
         if obj.image:
             return obj.image.url
         return None
+
+    def get_ingredients(self, obj):
+        recipe = obj
+        ingredients = recipe.ingredients.values(
+            'id',
+            'name',
+            'measurement_unit',
+            amount=models.F('ingredientinrecipe__amount')
+        )
+        return ingredients
 
     def get_is_favorited(self, obj):
         user = self.context.get('request').user
