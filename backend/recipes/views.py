@@ -5,9 +5,9 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from recipes.models import (Ingredient, IngredientInRecipe,
-                            Recipe, Tag, Favorite, ShoppingCart)
+                            Recipe, Tag)
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import (HTTP_400_BAD_REQUEST,
                                    HTTP_204_NO_CONTENT,
@@ -46,45 +46,19 @@ class TagViewSet(ReadOnlyModelViewSet):
 class RecipeViewSet(ModelViewSet):
     """Вьюсет рецепта"""
 
-    http_method_names = [
-        'get',
-        'post',
-        'patch',
-        'delete',
-    ]
+    queryset = Recipe.objects.all()
     permission_classes = (IsAdminOrAuthorOrReadOnly,)
     pagination_class = FoodPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
-    def get_serializer_class(self):
-        if self.action in ('list', 'retrieve'):
-            return RecipeReadSerializer
-        if self.action == 'favorite':
-            return FavoriteAddSerializer
-        if self.action == 'shopping_cart':
-            return ShoppingCartAddSerializer
-        return RecipeWriteSerializer
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
-    def get_queryset(self):
-        queryset = Recipe.objects.select_related('author').prefetch_related(
-            'tags',
-            'ingredients',
-            'shopping_list',
-            'favorites',
-        )
-        return queryset.annotate(
-            is_favorited=models.Exists(
-                Favorite.objects.filter(
-                    user=self.request.user, recipe=models.OuterRef('id')
-                )
-            ),
-            is_in_shopping_cart=models.Exists(
-                ShoppingCart.objects.filter(
-                    user=self.request.user, recipe=models.OuterRef('id')
-                )
-            )
-        )
+    def get_serializer_class(self):
+        if self.request.method in SAFE_METHODS:
+            return RecipeReadSerializer
+        return RecipeWriteSerializer
 
     @action(
         detail=True,
@@ -98,8 +72,8 @@ class RecipeViewSet(ModelViewSet):
             'user': user,
             'recipe': recipe,
         }
-        serializer = self.get_serializer(data=data,
-                                         context={'request': request})
+        serializer = FavoriteAddSerializer(data=data,
+                                           context={'request': request})
         if request.method == 'POST':
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -119,8 +93,8 @@ class RecipeViewSet(ModelViewSet):
             'user': user,
             'recipe': recipe,
         }
-        serializer = self.get_serializer(data=data,
-                                         context={'request': request})
+        serializer = ShoppingCartAddSerializer(data=data,
+                                               context={'request': request})
         if request.method == 'POST':
             serializer.is_valid(raise_exception=True)
             serializer.save()
