@@ -50,8 +50,7 @@ class RecipeViewSet(ModelViewSet):
         'tags',
         'ingredients',
         'shopping_list',
-        'favorites',
-        )
+        'favorites',)
     permission_classes = (IsAdminOrAuthorOrReadOnly,)
     pagination_class = FoodPagination
     filter_backends = (DjangoFilterBackend,)
