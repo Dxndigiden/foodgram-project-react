@@ -10,11 +10,11 @@ class Ingredient(models.Model):
 
     name = models.CharField(
         'Название',
-        max_length=MAX_LENGTH_NAME
+        max_length=MAX_LENGTH_NAME,
     )
     measurement_unit = models.CharField(
         'Единица измерения',
-        max_length=MAX_LENGTH_NAME
+        max_length=MAX_LENGTH_NAME,
     )
 
     class Meta:
@@ -36,17 +36,17 @@ class Tag(models.Model):
     name = models.CharField(
         'Название',
         max_length=MAX_LENGTH_NAME,
-        unique=True
+        unique=True,
     )
     color = ColorField(
         'Цвет',
         max_length=MAX_LENGTH_COLOR,
-        unique=True
+        unique=True,
     )
     slug = models.SlugField(
         'Ссылка',
         max_length=MAX_LENGTH_NAME,
-        unique=True
+        unique=True,
     )
 
     class Meta:
@@ -63,7 +63,7 @@ class Recipe(models.Model):
 
     name = models.CharField(
         'Название',
-        max_length=MAX_LENGTH_NAME
+        max_length=MAX_LENGTH_NAME,
     )
     author = models.ForeignKey(
         User,
@@ -84,12 +84,12 @@ class Recipe(models.Model):
         Ingredient,
         through='IngredientInRecipe',
         related_name='recipes',
-        verbose_name='Ингредиенты'
+        verbose_name='Ингредиенты',
     )
     tags = models.ManyToManyField(
         Tag,
         related_name='recipes',
-        verbose_name='Теги'
+        verbose_name='Теги',
     )
 
     class Meta:

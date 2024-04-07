@@ -7,7 +7,9 @@ from recipes.models import Recipe
 class RecipeShortSerializer(ModelSerializer):
     """Сериализатор краткого представления"""
 
-    image = Base64ImageField()
+    image = Base64ImageField(
+        required=True,
+        allow_null=False)
 
     class Meta:
         model = Recipe
