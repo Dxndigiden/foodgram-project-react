@@ -50,7 +50,7 @@ class RecipeReadSerializer(ModelSerializer):
 
     tags = TagSerializer(many=True, read_only=True)
     author = FoodUserSerializer(read_only=True)
-    ingredients = IngredientSerializer(read_only=True)
+    ingredients = IngredientSerializer(mamy=True)
     image = SerializerMethodField('get_image_url')
     is_favorited = SerializerMethodField(read_only=True)
     is_in_shopping_cart = SerializerMethodField(read_only=True)
@@ -103,7 +103,7 @@ class IngredientInRecipeWriteSerializer(ModelSerializer):
             raise ValidationError(NOT_AMOUNT_MESSAGE)
         if value < MIN_AMOUNT_TIME_OR_INGR:
             raise ValidationError(MIN_AMOUNT_MESSAGE)
-        if value <= MAX_AMOUNT_INGR:
+        if value >= MAX_AMOUNT_INGR:
             raise ValidationError(MAX_INGR_MESSAGE)
         return value
 
@@ -163,25 +163,23 @@ class RecipeWriteSerializer(ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
-        recipe = Recipe.objects.create(**validated_data)
+        ingredients_data = validated_data.pop('ingredients')
+        author = self.context['request'].user
+        recipe = Recipe.objects.create(author=author, **validated_data)
         recipe.tags.set(tags)
         self.create_ingredients_amounts(recipe=recipe,
-                                        ingredients=ingredients)
+                                        ingredients=ingredients_data)
         return recipe
 
     @transaction.atomic
     def update(self, instance, validated_data):
         tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
-        instance = super().update(instance, validated_data)
-        instance.tags.clear()
-        instance.tags.set(tags)
-        instance.ingredients.clear()
+        ingredients = validated_data.pop('ingredients', [])
+        IngredientInRecipe.objects.filter(recipe=instance).delete()
         self.create_ingredients_amounts(recipe=instance,
                                         ingredients=ingredients)
-        instance.save()
-        return instance
+        instance.tags.set(tags)
+        return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         request = self.context.get('request')
