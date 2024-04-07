@@ -34,7 +34,7 @@ class IngredientSerializer(ModelSerializer):
 
     class Meta:
         model = Ingredient
-        fields = ('id', 'name', 'measurement_unit')
+        fields = '__all__'
 
 
 class TagSerializer(ModelSerializer):
@@ -42,7 +42,7 @@ class TagSerializer(ModelSerializer):
 
     class Meta:
         model = Tag
-        fields = ('id', 'name', 'color', 'slug')
+        fields = '__all__'
 
 
 class RecipeReadSerializer(ModelSerializer):
@@ -111,13 +111,16 @@ class RecipeWriteSerializer(ModelSerializer):
 
     tags = PrimaryKeyRelatedField(queryset=Tag.objects.all(),
                                   many=True)
+    author = FoodUserSerializer(read_only=True)
     ingredients = IngredientInRecipeWriteSerializer(many=True)
     image = Base64ImageField(required=True, allow_null=False)
 
     class Meta:
         model = Recipe
         fields = (
+            'id',
             'tags',
+            'author',
             'ingredients',
             'name',
             'image',
@@ -185,6 +188,7 @@ class RecipeWriteSerializer(ModelSerializer):
 
 class FavoriteAddSerializer(ModelSerializer):
     """Сериализатор добавления в избранное"""
+
     recipe = PrimaryKeyRelatedField(queryset=Recipe.objects.all())
     user = PrimaryKeyRelatedField(queryset=User.objects.all())
 
@@ -213,6 +217,7 @@ class FavoriteAddSerializer(ModelSerializer):
 
 class ShoppingCartAddSerializer(ModelSerializer):
     """Сериализатор добавления в избранное"""
+
     recipe = PrimaryKeyRelatedField(queryset=Recipe.objects.all())
     user = PrimaryKeyRelatedField(queryset=User.objects.all())
 

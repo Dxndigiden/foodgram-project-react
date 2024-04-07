@@ -46,11 +46,7 @@ class TagViewSet(ReadOnlyModelViewSet):
 class RecipeViewSet(ModelViewSet):
     """Вьюсет рецепта"""
 
-    queryset = Recipe.objects.select_related('author').prefetch_related(
-        'tags',
-        'ingredients',
-        'shopping_list',
-        'favorites',)
+    queryset = Recipe.objects.all()
     permission_classes = (IsAdminOrAuthorOrReadOnly,)
     pagination_class = FoodPagination
     filter_backends = (DjangoFilterBackend,)
