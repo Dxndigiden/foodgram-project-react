@@ -162,15 +162,17 @@ class RecipeWriteSerializer(ModelSerializer):
             raise ValidationError(VALIDATE_NAME_MESSAGE)
         return value
 
-    def create_ingredients_amounts(self, ingredients, recipe):
-        IngredientInRecipe.objects.bulk_create(
-            [IngredientInRecipe(
-                recipe=recipe,
-                amount=ingredient['amount']
-            ) for ingredient in ingredients]
-        )
+    def create_ingredients_amounts(self, recipe, ingredients_data):
+        ingredients = []
+        for ingredient_data in ingredients_data:
+            ingredient = ingredient_data['id']
+            amount = ingredient_data['amount']
+            recipe_ingredient = IngredientInRecipe(
+                recipe=recipe, ingredient=ingredient, amount=amount,
+            )
+            ingredients.append(recipe_ingredient)
+        IngredientInRecipe.objects.bulk_create(ingredients)
 
-    @transaction.atomic
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients_data = validated_data.pop('ingredients')
@@ -181,7 +183,6 @@ class RecipeWriteSerializer(ModelSerializer):
                                         ingredients=ingredients_data)
         return recipe
 
-    @transaction.atomic
     def update(self, instance, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients', [])
@@ -192,10 +193,9 @@ class RecipeWriteSerializer(ModelSerializer):
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
-        request = self.context.get('request')
-        context = {'request': request}
-        return RecipeReadSerializer(instance,
-                                    context=context).data
+        return RecipeReadSerializer(instance, context={
+            'request': self.context.get('request')
+        }).data
 
 
 class FavoriteAddSerializer(ModelSerializer):
