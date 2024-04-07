@@ -88,6 +88,7 @@ POSTGRES_PASSWORD=your_postgres_password
 DB_HOST=db
 DB_PORT=5432
 SECRET_KEY=your_django_secret_key
+CSRF_TRUSTED_ORIGINS=your_adress
 
 DEBUG=False
 DEVELOP=False
