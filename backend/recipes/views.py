@@ -7,7 +7,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from recipes.models import (Ingredient, IngredientInRecipe,
                             Recipe, Tag)
 from rest_framework.decorators import action
-from rest_framework.permissions import SAFE_METHODS, IsAuthenticated, AllowAny
+from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import (HTTP_400_BAD_REQUEST,
                                    HTTP_204_NO_CONTENT,
@@ -30,7 +30,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAdminOrAuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientFilter
 
@@ -40,13 +40,18 @@ class TagViewSet(ReadOnlyModelViewSet):
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAdminOrAuthorOrReadOnly,)
 
 
 class RecipeViewSet(ModelViewSet):
     """Вьюсет рецепта"""
 
-    queryset = Recipe.objects.all()
+    queryset = Recipe.objects.select_related('author').prefetch_related(
+            'tags',
+            'ingredients',
+            'shopping_list',
+            'favorites',
+        )
     permission_classes = (IsAdminOrAuthorOrReadOnly,)
     pagination_class = FoodPagination
     filter_backends = (DjangoFilterBackend,)
