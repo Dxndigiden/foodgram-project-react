@@ -114,7 +114,7 @@ DEVELOP=False
     docker compose exec -T backend python manage.py tags_load
     ```
 
-8. Соберите статику:
+8. Акаунт админа для теста:
    
     ```
     Акаунт админа для теста:
