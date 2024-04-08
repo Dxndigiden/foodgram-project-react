@@ -1,8 +1,8 @@
 from djoser.serializers import (UserCreateSerializer,
-                                UserSerializer,
-                                ReadOnlyField,
-                                ValidationError)
+                                UserSerializer,)
 from rest_framework.fields import SerializerMethodField
+from rest_framework.exceptions import ValidationError
+from rest_framework.serializers import ReadOnlyField
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from .models import User, Subscription
