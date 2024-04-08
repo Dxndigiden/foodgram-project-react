@@ -1,18 +1,14 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from core.constants import (
-    MAX_LENGTH_NAME,
-    MAX_LENGTH_EMAIL,
-    MAX_LENGTH_PSWRD,
-)
+from core.constants import MAX_LENGTH_NAME, MAX_LENGTH_EMAIL
 
 
 class User(AbstractUser):
     """Модель пользователя"""
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'password', 'first_name', 'last_name']
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
     email = models.EmailField(
         'Адрес электронной почты',
         max_length=MAX_LENGTH_EMAIL,
@@ -31,15 +27,11 @@ class User(AbstractUser):
         'Фамилия',
         max_length=MAX_LENGTH_NAME
     )
-    password = models.CharField(
-        'Пароль',
-        max_length=MAX_LENGTH_PSWRD,
-    )
 
     class Meta:
-        ordering = ('username',)
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+        ordering = ('id',)
 
     def __str__(self):
         return self.username
@@ -51,10 +43,10 @@ class Subscription(models.Model):
     user = models.ForeignKey(
         User,
         verbose_name='Пользователь',
-        related_name='user',
+        related_name='follower',
         on_delete=models.CASCADE
     )
-    following = models.ForeignKey(
+    author = models.ForeignKey(
         User,
         verbose_name='Автор',
         related_name='following',
@@ -66,15 +58,15 @@ class Subscription(models.Model):
         verbose_name_plural = 'Подписки'
         constraints = [
             models.UniqueConstraint(
-                fields=('user', 'following'),
+                fields=('user', 'author'),
                 name='unique_subscribe'
             ),
             models.CheckConstraint(
-                check=~models.Q(user=models.F('following')),
-                name='not_self_subscribe'
+                check=~models.Q(user=models.F('author')),
+                name='prevent_self_follow'
             ),
         ]
-        ordering = ['following']
+        ordering = ('id',)
 
     def __str__(self):
         return f'{self.user} подписан на {self.author}'

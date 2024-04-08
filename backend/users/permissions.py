@@ -2,24 +2,12 @@ from rest_framework import permissions
 
 
 class IsAdminOrAuthorOrReadOnly(permissions.BasePermission):
-    """Доступ у автора или админа"""
+    """Права админа и пользователя"""
 
-    def has_permission(self, request, view):
+    def has_object_permission(self, request, view, obj):
         return (
-            request.method in permissions.SAFE_METHODS
-            or request.user.is_authenticated
-        )
-
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return obj.author == request.user or request.user.is_superuser
-
-
-class IsAdminOrCurrentUserOrReadOnly(permissions.BasePermission):
-    """Доступ у текущего пользователя или админа"""
-
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return obj.id == request.user or request.user.is_superuser
+            request.user.is_authenticated and (
+                request.user.is_superuser or obj.author == request.user
+                or request.method == 'POST'
+            )
+        ) or request.method in permissions.SAFE_METHODS
