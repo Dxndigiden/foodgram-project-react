@@ -4,8 +4,8 @@ from django.db import models
 from core.constants import (
     MAX_LENGTH_NAME,
     MAX_LENGTH_EMAIL,
-    MAX_LENGTH_PSWRD
-    )
+    MAX_LENGTH_PSWRD,
+)
 
 
 class User(AbstractUser):

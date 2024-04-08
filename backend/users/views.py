@@ -64,7 +64,7 @@ class FoodUserViewSet(UserViewSet):
             return Response(
                 serializer.data,
                 status=status.HTTP_201_CREATED,
-                )
+            )
         follow = user.user.filter(following=following)
         if not follow:
             return Response(
