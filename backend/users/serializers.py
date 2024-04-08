@@ -1,8 +1,9 @@
 from djoser.serializers import (UserCreateSerializer,
                                 UserSerializer,
+                                ReadOnlyField,
                                 ValidationError)
 from rest_framework.fields import SerializerMethodField
-from rest_framework.serializers import ModelSerializer
+from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from .models import User, Subscription
 from recipes.recipeshort_serializers import RecipeShortSerializer
@@ -14,7 +15,10 @@ class FoodUserCreateSerializer(UserCreateSerializer):
 
     class Meta(UserCreateSerializer.Meta):
         fields = ('email', 'id', 'username',
-                  'first_name', 'last_name', 'password')
+                  'first_name', 'last_name', 'password',)
+        extra_kwargs = {
+            'password': {'write_only': True},
+        }
 
 
 class FoodUserSerializer(UserSerializer):
@@ -25,56 +29,53 @@ class FoodUserSerializer(UserSerializer):
     class Meta:
         model = User
         fields = ('email', 'id', 'username',
-                  'first_name', 'last_name', 'is_subscribed', )
+                  'first_name', 'last_name', 'is_subscribed',)
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
-        return (not user.is_anonymous
-                and obj.following.filter(
-                    user=user).exists())
+        if user.is_anonymous or (user == obj):
+            return False
+        return obj.following.filter(user=user).exists()
 
 
 class SubscribeSerializer(FoodUserSerializer):
-    """Сериализатор просмотра подписки"""
+    """Сериализатор просмотра и создания подписки"""
 
+    email = ReadOnlyField(source='following.email')
+    id = ReadOnlyField(source='following.id')
+    username = ReadOnlyField(source='following.username')
+    first_name = ReadOnlyField(source='following.first_name')
+    last_name = ReadOnlyField(source='following.last_name')
     recipes = SerializerMethodField()
     recipes_count = SerializerMethodField()
 
     class Meta:
-        model = User
+        model = Subscription
         fields = ('email', 'id', 'username', 'first_name', 'last_name',
                   'is_subscribed', 'recipes', 'recipes_count', )
 
     def get_recipes(self, obj):
-        limit = self.context['request'].query_params.get('recipes_limit')
-        try:
-            return RecipeShortSerializer(obj.recipes.all()[:int(limit)],
-                                         many=True).data if limit else None
-        except ValueError:
+        limit = self.context['request'].GET.get('recipes_limit')
+        recipes = obj.following.recipe.all()
+        if limit and limit.isdigit():
+            recipes = recipes[: int(limit)]
             return None
+        return RecipeShortSerializer(recipes, many=True).data
 
     def get_recipes_count(self, obj):
-        return obj.recipes.count()
+        return obj.following.recipe.count()
 
-
-class SubscribeAddSerializer(ModelSerializer):
-    """Сериализатор создания подписки"""
-
-    class Meta:
-        model = Subscription
-        fields = ('user', 'author')
-
-    def subscribe(self, data):
-        user = data['user']
-        author = data['author']
-        Subscription.objects.create(user=user, author=author)
-        return True
-
-    def validate_sub(self, obj):
-        user = obj.get('user')
-        author = obj.get('author')
-        if user.following.filter(author=author).exists():
-            raise ValidationError(ERR_ALREADY_SUB)
-        if user == author:
-            raise ValidationError(ERR_SUB_YOUSELF)
-        return obj
+    def validate(self, data):
+        following = self.context.get('following')
+        user = self.context['request'].user
+        if user.user.filter(following=following).exists():
+            raise ValidationError(
+                message=ERR_ALREADY_SUB,
+                status=HTTP_400_BAD_REQUEST
+            )
+        if user == following:
+            raise ValidationError(
+                message=ERR_SUB_YOUSELF,
+                status=HTTP_400_BAD_REQUEST,
+            )
+        return data

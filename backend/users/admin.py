@@ -26,7 +26,7 @@ class UserAdmin(admin.ModelAdmin):
         queryset = super().get_queryset(request)
         queryset = queryset.annotate(recipe_count=Count('recipes',
                                                         distinct=True),
-                                     follower_count=Count('follower',
+                                     follower_count=Count('user',
                                                           distinct=True))
         return queryset
 
@@ -35,6 +35,6 @@ class UserAdmin(admin.ModelAdmin):
 class SubscribeAdmin(admin.ModelAdmin):
     """Админка подписки"""
 
-    list_display = ('id', 'user', 'author')
+    list_display = ('id', 'user', 'following')
     search_fields = ('user',)
     list_filter = ('user', )
