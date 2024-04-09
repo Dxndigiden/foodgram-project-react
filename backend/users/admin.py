@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.db.models import Count
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.contrib.auth.models import Group
 
 from .models import Subscription, User
@@ -10,13 +10,33 @@ admin.site.unregister(Group)
 
 
 @admin.register(User)
-class UserAdmin(UserAdmin):
+class UserAdmin(DjangoUserAdmin):
     """Админка для пользователя"""
 
     list_display = ('id', 'username', 'first_name',
                     'last_name', 'email', 'get_recipe_count',
                     'get_follower_count', 'password')
     list_filter = ('email', 'username')
+    fieldsets = (
+        (None, {'fields': ('email', 'password', 'is_superuser', 'is_staff')}),
+        ('Personal info', {'fields': ('username', 'first_name', 'last_name')}),
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': (
+                'email',
+                'password1',
+                'password2',
+                'username',
+                'first_name',
+                'last_name',
+            ),
+        }),
+    )
+    search_fields = ('username',)
+    ordering = ('email',)
+    filter_horizontal = ()
 
     def get_recipe_count(self, obj):
         return obj.recipes.count()
