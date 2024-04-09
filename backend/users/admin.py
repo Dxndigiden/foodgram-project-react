@@ -1,11 +1,14 @@
 from django.contrib import admin
 from django.db.models import Count
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import Group
 
 from .models import Subscription, User
 
 
 @admin.register(User)
-class UserAdmin(admin.ModelAdmin):
+@admin.site.unregister(Group)
+class UserAdmin(UserAdmin):
     """Админка для пользователя"""
 
     list_display = ('id', 'username', 'first_name',
