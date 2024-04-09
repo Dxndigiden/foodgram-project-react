@@ -13,6 +13,7 @@ from core.constants import (ERR_NOT_FOUND,
                             SUCCESS_UNSUB)
 from api.pagination import FoodPagination
 from .serializers import (FoodUserSerializer,
+                          FoodUserCreateSerializer,
                           SubscribeSerializer,
                           SubscribeAddSerializer)
 
@@ -82,7 +83,7 @@ class FoodUserViewSet(UserViewSet):
     def me(self, request):
         user = request.user
         if user.is_authenticated:
-            serializer = FoodUserSerializer(
+            serializer = FoodUserCreateSerializer(
                 user,
                 context=self.get_serializer_context()
             )
