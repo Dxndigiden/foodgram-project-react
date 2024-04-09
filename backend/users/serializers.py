@@ -1,16 +1,12 @@
-import re
-
-from django.core.exceptions import ValidationError
 from djoser.serializers import (UserCreateSerializer,
-                                UserSerializer)
+                                UserSerializer,
+                                ValidationError)
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
 
 from .models import User, Subscription
-from core.constants import (ERR_SUB_YOUSELF,
-                            ERR_ALREADY_SUB,
-                            VALIDATE_NAME_MESSAGE)
 from recipes.recipeshort_serializers import RecipeShortSerializer
+from core.constants import ERR_SUB_YOUSELF, ERR_ALREADY_SUB
 
 
 class FoodUserCreateSerializer(UserCreateSerializer):
@@ -19,11 +15,6 @@ class FoodUserCreateSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
         fields = ('email', 'id', 'username',
                   'first_name', 'last_name', 'password')
-
-    def validate_username(self, value):
-        if not re.match(r'^[0-9\W]+$', value):
-            raise ValidationError(VALIDATE_NAME_MESSAGE)
-        return value
 
 
 class FoodUserSerializer(UserSerializer):
@@ -37,10 +28,8 @@ class FoodUserSerializer(UserSerializer):
                   'first_name', 'last_name', 'is_subscribed', )
 
     def get_is_subscribed(self, obj):
-        user = [self.context.get('request').user
-                if self.context.get('request')
-                else None]
-        return (user and not user.is_anonymous
+        user = self.context['request'].user
+        return (not user.is_anonymous
                 and obj.following.filter(
                     user=user).exists())
 
@@ -75,7 +64,7 @@ class SubscribeAddSerializer(ModelSerializer):
         model = Subscription
         fields = ('user', 'author')
 
-    def create(self, data):
+    def subscribe(self, data):
         user = data['user']
         author = data['author']
         Subscription.objects.create(user=user, author=author)
