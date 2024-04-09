@@ -9,7 +9,6 @@ from .models import Subscription, User
 
 
 admin.site.unregister(Group)
-admin.site.unregister(User)
 
 
 class UserChangeForm(UserCreationForm):
