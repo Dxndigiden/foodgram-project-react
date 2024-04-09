@@ -1,9 +1,7 @@
 from django.contrib import admin
 from django.db.models import Count
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import Group
-from django.utils.translation import gettext_lazy as _
 
 from .models import Subscription, User
 
@@ -11,27 +9,14 @@ from .models import Subscription, User
 admin.site.unregister(Group)
 
 
-class UserChangeForm(UserCreationForm):
-
-    class Meta:
-        model = User
-        fields = '__all__'
-        field_classes = UserCreationForm.Meta.field_classes
-
-
 @admin.register(User)
 class UserAdmin(DjangoUserAdmin):
     """Админка для пользователя"""
 
-    add_form = UserChangeForm
     list_display = ('id', 'username', 'first_name',
                     'last_name', 'email', 'get_recipe_count',
                     'get_follower_count', 'password')
     list_filter = ('email', 'username')
-    add_fieldsets = (
-        (None, {'fields': ('username', 'password')}),
-        (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
-    )
 
     def get_recipe_count(self, obj):
         return obj.recipes.count()
