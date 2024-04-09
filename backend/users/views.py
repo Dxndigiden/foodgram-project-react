@@ -8,12 +8,9 @@ from rest_framework.response import Response
 from rest_framework.status import (HTTP_200_OK, HTTP_401_UNAUTHORIZED)
 from users.models import User, Subscription
 
-from core.constants import (ERR_NOT_FOUND,
-                            SUCCESS_SUB,
-                            SUCCESS_UNSUB)
+from core.constants import ERR_NOT_FOUND
 from api.pagination import FoodPagination
 from .serializers import (FoodUserSerializer,
-                          FoodUserCreateSerializer,
                           SubscribeSerializer,
                           SubscribeAddSerializer)
 
@@ -53,7 +50,7 @@ class FoodUserViewSet(UserViewSet):
 
     @action(methods=['post', 'delete'], detail=True,
             permission_classes=[IsAuthenticated])
-    def subscribe(self, request, id=None):
+    def subscribe(self, request, id):
         user = request.user.id
         author = get_object_or_404(User, id=id).id
         if request.method == 'POST':
@@ -64,16 +61,16 @@ class FoodUserViewSet(UserViewSet):
                 context={'request': request}
             )
             serializer.is_valid(raise_exception=True)
-            response_data = serializer.save()
             return Response(
-                {'message': SUCCESS_SUB, 'data': response_data},
+                {'data': serializer.save()},
                 status=status.HTTP_201_CREATED,
             )
-        subscribe = get_object_or_404(Subscription,
-                                      user=user, author=author)
-        subscribe.delete()
-        return Response({'message': SUCCESS_UNSUB},
-                        status=status.HTTP_204_NO_CONTENT)
+        if request.method == 'DELETE':
+            subscribe = get_object_or_404(Subscription,
+                                          user=user,
+                                          author=author)
+            subscribe.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_serializer_context(self):
         return {'request': self.request}
@@ -83,7 +80,7 @@ class FoodUserViewSet(UserViewSet):
     def me(self, request):
         user = request.user
         if user.is_authenticated:
-            serializer = FoodUserCreateSerializer(
+            serializer = FoodUserSerializer(
                 user,
                 context=self.get_serializer_context()
             )
