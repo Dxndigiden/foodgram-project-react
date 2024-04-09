@@ -35,12 +35,13 @@ class User(AbstractUser):
         blank=False,
     )
     password = models.CharField(
+        'Пароль',
         max_length=MAX_LENGTH_PASSWORD,
         blank=False,
     )
 
     class Meta:
-        verbose_name = 'Пользователь'
+        verbose_name = 'Пользователь'   
         verbose_name_plural = 'Пользователи'
         ordering = ('username',)
 
