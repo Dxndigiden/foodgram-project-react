@@ -29,7 +29,7 @@ class FoodUserSerializer(UserSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
-        return (not user.is_anonymous
+        return (user and not user.is_anonymous
                 and obj.following.filter(
                     user=user).exists())
 
