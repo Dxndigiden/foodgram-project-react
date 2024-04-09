@@ -6,8 +6,10 @@ from django.contrib.auth.models import Group
 from .models import Subscription, User
 
 
+admin.site.unregister(Group)
+
+
 @admin.register(User)
-@admin.site.unregister(Group)
 class UserAdmin(UserAdmin):
     """Админка для пользователя"""
 
