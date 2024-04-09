@@ -64,7 +64,7 @@ class SubscribeAddSerializer(ModelSerializer):
         model = Subscription
         fields = ('user', 'author')
 
-    def subscribe(self, data):
+    def create(self, data):
         user = data['user']
         author = data['author']
         Subscription.objects.create(user=user, author=author)
