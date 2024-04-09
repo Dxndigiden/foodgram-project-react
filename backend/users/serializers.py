@@ -48,9 +48,8 @@ class FoodUserSerializer(UserSerializer):
 class SubscribeSerializer(FoodUserSerializer):
     """Сериализатор просмотра подписки"""
 
-    recipes = SerializerMethodField(source='recipes.count',
-                                    read_only=True)
-    recipes_count = SerializerMethodField(read_only=True)
+    recipes = SerializerMethodField()
+    recipes_count = SerializerMethodField()
 
     class Meta:
         model = User
