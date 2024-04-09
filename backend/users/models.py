@@ -1,9 +1,11 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from core.constants import (MAX_LENGTH_NAME,
                             MAX_LENGTH_EMAIL,
-                            MAX_LENGTH_PASSWORD)
+                            MAX_LENGTH_PASSWORD,
+                            ERR_SUB_YOUSELF)
 
 
 class User(AbstractUser):
@@ -14,20 +16,23 @@ class User(AbstractUser):
     email = models.EmailField(
         'Адрес электронной почты',
         max_length=MAX_LENGTH_EMAIL,
-        unique=True
+        unique=True,
+        blank=False,
     )
     username = models.CharField(
         'Уникальное имя пользователя',
         max_length=MAX_LENGTH_NAME,
-        unique=True
+        unique=True,
     )
     first_name = models.CharField(
         'Имя',
-        max_length=MAX_LENGTH_NAME
+        max_length=MAX_LENGTH_NAME,
+        blank=False,
     )
     last_name = models.CharField(
         'Фамилия',
-        max_length=MAX_LENGTH_NAME
+        max_length=MAX_LENGTH_NAME,
+        blank=False,
     )
     password = models.CharField(
         max_length=MAX_LENGTH_PASSWORD,
@@ -37,10 +42,10 @@ class User(AbstractUser):
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
-        ordering = ('id',)
+        ordering = ('username',)
 
     def __str__(self):
-        return self.username
+        return self.get_full_name()
 
 
 class Subscription(models.Model):
@@ -72,7 +77,11 @@ class Subscription(models.Model):
                 name='prevent_self_follow'
             ),
         ]
-        ordering = ('id',)
+
+    def full_clean(self, *args, **kwargs):
+        super().full_clean(*args, **kwargs)
+        if self.user == self.author:
+            raise ValidationError(ERR_SUB_YOUSELF)
 
     def __str__(self):
         return f'{self.user} подписан на {self.author}'

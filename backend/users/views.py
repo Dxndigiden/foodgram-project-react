@@ -8,9 +8,12 @@ from rest_framework.response import Response
 from rest_framework.status import (HTTP_200_OK, HTTP_401_UNAUTHORIZED)
 from users.models import User, Subscription
 
-from core.constants import ERR_NOT_FOUND
+from core.constants import (ERR_NOT_FOUND,
+                            SUCCESS_SUB,
+                            SUCCESS_UNSUB)
 from api.pagination import FoodPagination
 from .serializers import (FoodUserSerializer,
+                          FoodUserCreateSerializer,
                           SubscribeSerializer,
                           SubscribeAddSerializer)
 
@@ -44,13 +47,13 @@ class FoodUserViewSet(UserViewSet):
         queryset = User.objects.filter(following__user=request.user)
         pages = self.paginate_queryset(queryset)
         serializer = SubscribeSerializer(
-            pages, many=True, context={'request': request}
+            pages, context={'request': request}, many=True
         )
         return self.get_paginated_response(serializer.data)
 
     @action(methods=['post', 'delete'], detail=True,
             permission_classes=[IsAuthenticated])
-    def subscribe(self, request, id):
+    def subscribe(self, request, id=None):
         user = request.user.id
         author = get_object_or_404(User, id=id).id
         if request.method == 'POST':
@@ -61,16 +64,16 @@ class FoodUserViewSet(UserViewSet):
                 context={'request': request}
             )
             serializer.is_valid(raise_exception=True)
+            response_data = serializer.save()
             return Response(
-                {'data': serializer.save()},
+                {'message': SUCCESS_SUB, 'data': response_data},
                 status=status.HTTP_201_CREATED,
             )
-        if request.method == 'DELETE':
-            subscribe = get_object_or_404(Subscription,
-                                          user=user,
-                                          author=author)
-            subscribe.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        subscribe = get_object_or_404(Subscription,
+                                      user=user, author=author)
+        subscribe.delete()
+        return Response({'message': SUCCESS_UNSUB},
+                        status=status.HTTP_204_NO_CONTENT)
 
     def get_serializer_context(self):
         return {'request': self.request}
@@ -80,7 +83,7 @@ class FoodUserViewSet(UserViewSet):
     def me(self, request):
         user = request.user
         if user.is_authenticated:
-            serializer = FoodUserSerializer(
+            serializer = FoodUserCreateSerializer(
                 user,
                 context=self.get_serializer_context()
             )
