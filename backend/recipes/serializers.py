@@ -16,6 +16,8 @@ from core.constants import (MIN_AMOUNT_MESSAGE,
                             MIN_AMOUNT_TIME_OR_INGR,
                             MIN_TIME_MESSAGE,
                             MAX_TIME_MESSAGE,
+                            MAX_INGR_MESSAGE,
+                            MAX_AMOUNT_INGR,
                             MAX_AMOUNT_TIME,
                             ERR_ALREADY_RECIPE)
 from recipes.models import (Ingredient,
@@ -64,7 +66,7 @@ class RecipeReadSerializer(ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     author = FoodUserSerializer(read_only=True, default=CurrentUserDefault())
     ingredients = IngredienterRecipeReadializer(
-        many=True, source='recipe_ingredients',
+        many=True, source='recipe_ingr',
     )
     image = SerializerMethodField('get_image_url')
     is_favorited = SerializerMethodField(read_only=True)
@@ -114,8 +116,10 @@ class IngredientInRecipeWriteSerializer(ModelSerializer):
         fields = ('id', 'amount')
 
     def validate_amount(self, value):
-        if value <= MIN_AMOUNT_TIME_OR_INGR:
+        if value < MIN_AMOUNT_TIME_OR_INGR:
             raise ValidationError(MIN_AMOUNT_MESSAGE)
+        if value >= MAX_AMOUNT_INGR:
+            raise ValidationError(MAX_INGR_MESSAGE)
         return value
 
 
@@ -180,11 +184,6 @@ class RecipeWriteSerializer(ModelSerializer):
         self.add_ingredients(recipe, ingredients_data)
         return recipe
 
-    def to_representation(self, instance):
-        return RecipeReadSerializer(instance, context={
-            'request': self.context.get('request')
-        }).data
-
     def update(self, instance, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients', [])
@@ -192,6 +191,11 @@ class RecipeWriteSerializer(ModelSerializer):
         self.add_ingredients(instance, ingredients)
         instance.tags.set(tags)
         return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        return RecipeReadSerializer(instance, context={
+            'request': self.context.get('request')
+        }).data
 
 
 class FavoriteAddSerializer(ModelSerializer):
