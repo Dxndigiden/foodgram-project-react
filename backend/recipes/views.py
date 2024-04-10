@@ -24,7 +24,6 @@ from .serializers import (IngredientSerializer,
                           FavoriteAddSerializer,
                           ShoppingCartAddSerializer)
 from api.pagination import FoodPagination
-from users.permissions import IsAdminOrAuthorOrReadOnly
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
@@ -32,7 +31,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    permission_classes = (IsAdminOrAuthorOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientFilter
 
@@ -42,7 +41,7 @@ class TagViewSet(ReadOnlyModelViewSet):
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = (IsAdminOrAuthorOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
 
 
 class RecipeViewSet(ModelViewSet):
