@@ -7,7 +7,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from recipes.models import (Ingredient, IngredientInRecipe,
                             Recipe, Tag)
 from rest_framework.decorators import action
-from rest_framework.permissions import (IsAuthenticated,
+from rest_framework.permissions import (SAFE_METHODS,
+                                        IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.status import (HTTP_400_BAD_REQUEST,
@@ -57,7 +58,7 @@ class RecipeViewSet(ModelViewSet):
         serializer.save(author=self.request.user)
 
     def get_serializer_class(self):
-        if self.action in ('list', 'retrieve'):
+        if self.request.method in SAFE_METHODS:
             return RecipeReadSerializer
         return RecipeWriteSerializer
 

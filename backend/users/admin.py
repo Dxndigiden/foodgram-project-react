@@ -15,7 +15,7 @@ class UserAdmin(DjangoUserAdmin):
 
     list_display = ('id', 'username', 'first_name',
                     'last_name', 'email', 'get_recipe_count',
-                    'get_follower_count', 'password')
+                    'get_follower_count',)
     list_filter = ('email', 'username')
 
     def get_recipe_count(self, obj):
