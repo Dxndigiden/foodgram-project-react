@@ -158,14 +158,16 @@ class RecipeWriteSerializer(ModelSerializer):
             raise ValidationError(VALIDATE_NAME_MESSAGE)
         return value
 
-    def add_ingredients(self, ingredients, recipe):
-        IngredientInRecipe.objects.bulk_create(
-            [IngredientInRecipe(
-                ingredient=Ingredient.objects.get(id=ingredient['id']),
-                recipe=recipe,
-                amount=ingredient['amount']
-            ) for ingredient in ingredients]
-        )
+    def add_ingredients(self, recipe, ingredients_data):
+        ingredients = []
+        for ingredient_data in ingredients_data:
+            ingredient = ingredient_data['id']
+            amount = ingredient_data['amount']
+            recipe_ingredient = IngredientInRecipe(
+                recipe=recipe, ingredient=ingredient, amount=amount,
+            )
+            ingredients.append(recipe_ingredient)
+        IngredientInRecipe.objects.bulk_create(ingredients)
 
     def create(self, validated_data):
         tags = validated_data.pop('tags')
