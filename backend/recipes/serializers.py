@@ -1,3 +1,5 @@
+import re
+
 from django.db import models
 from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
@@ -8,6 +10,9 @@ from rest_framework.serializers import (ModelSerializer,
                                         CurrentUserDefault)
 
 from core.constants import (MIN_AMOUNT_MESSAGE,
+                            MIN_TAG_MESSAGE,
+                            UNIQUE_TAG_MESSAGE,
+                            VALIDATE_NAME_MESSAGE,
                             MIN_AMOUNT_TIME_OR_INGR,
                             MIN_TIME_MESSAGE,
                             MAX_TIME_MESSAGE,
@@ -46,7 +51,7 @@ class RecipeReadSerializer(ModelSerializer):
 
     tags = TagSerializer(many=True, read_only=True)
     author = FoodUserSerializer(read_only=True, default=CurrentUserDefault())
-    ingredients = SerializerMethodField()
+    ingredients = SerializerMethodField('get_ingredients')
     image = SerializerMethodField('get_image_url')
     is_favorited = SerializerMethodField(read_only=True)
     is_in_shopping_cart = SerializerMethodField(read_only=True)
@@ -118,7 +123,7 @@ class RecipeWriteSerializer(ModelSerializer):
     tags = PrimaryKeyRelatedField(queryset=Tag.objects.all(),
                                   many=True)
     ingredients = IngredientInRecipeWriteSerializer(many=True)
-    image = Base64ImageField(required=True, allow_null=False)
+    image = Base64ImageField()
 
     class Meta:
         model = Recipe
@@ -138,6 +143,21 @@ class RecipeWriteSerializer(ModelSerializer):
             raise ValidationError(MAX_TIME_MESSAGE)
         return value
 
+    def validate_tags(self, value):
+        if not value:
+            raise ValidationError(MIN_TAG_MESSAGE)
+        tags_list = []
+        for tag in value:
+            if tag in tags_list:
+                raise ValidationError(UNIQUE_TAG_MESSAGE)
+            tags_list.append(tag)
+        return value
+
+    def validate_name(self, value):
+        if re.match(r'^[0-9\W]+$', value):
+            raise ValidationError(VALIDATE_NAME_MESSAGE)
+        return value
+
     def add_ingredients(self, recipe, ingredients_data):
         ingredients = []
         for ingredient_data in ingredients_data:
@@ -155,23 +175,21 @@ class RecipeWriteSerializer(ModelSerializer):
         author = self.context['request'].user
         recipe = Recipe.objects.create(author=author, **validated_data)
         recipe.tags.set(tags)
-        self.add_ingredients(recipe=recipe,
-                             ingredients=ingredients_data)
+        self.add_ingredients(recipe, ingredients_data)
         return recipe
-
-    def update(self, instance, validated_data):
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients', [])
-        IngredientInRecipe.objects.filter(recipe=instance).delete()
-        self.add_ingredients(recipe=instance,
-                             ingredients=ingredients)
-        instance.tags.set(tags)
-        return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         return RecipeReadSerializer(instance, context={
             'request': self.context.get('request')
         }).data
+
+    def update(self, instance, validated_data):
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients', [])
+        IngredientInRecipe.objects.filter(recipe=instance).delete()
+        self.add_ingredients(instance, ingredients)
+        instance.tags.set(tags)
+        return super().update(instance, validated_data)
 
 
 class FavoriteAddSerializer(ModelSerializer):
