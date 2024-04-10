@@ -1,5 +1,3 @@
-import re
-
 from django.db import models
 from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
@@ -10,9 +8,6 @@ from rest_framework.serializers import (ModelSerializer,
                                         CurrentUserDefault)
 
 from core.constants import (MIN_AMOUNT_MESSAGE,
-                            MIN_TAG_MESSAGE,
-                            UNIQUE_TAG_MESSAGE,
-                            VALIDATE_NAME_MESSAGE,
                             MIN_AMOUNT_TIME_OR_INGR,
                             MIN_TIME_MESSAGE,
                             MAX_TIME_MESSAGE,
@@ -141,21 +136,6 @@ class RecipeWriteSerializer(ModelSerializer):
             raise ValidationError(MIN_TIME_MESSAGE)
         if value >= MAX_AMOUNT_TIME:
             raise ValidationError(MAX_TIME_MESSAGE)
-        return value
-
-    def validate_tags(self, value):
-        if not value:
-            raise ValidationError(MIN_TAG_MESSAGE)
-        tags_list = []
-        for tag in value:
-            if tag in tags_list:
-                raise ValidationError(UNIQUE_TAG_MESSAGE)
-            tags_list.append(tag)
-        return value
-
-    def validate_name(self, value):
-        if re.match(r'^[0-9\W]+$', value):
-            raise ValidationError(VALIDATE_NAME_MESSAGE)
         return value
 
     def add_ingredients(self, recipe, ingredients_data):
