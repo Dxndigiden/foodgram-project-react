@@ -163,7 +163,7 @@ class RecipeWriteSerializer(ModelSerializer):
             raise ValidationError(VALIDATE_NAME_MESSAGE)
         return value
 
-    def create_ingredients_amounts(self, recipe, ingredients_data):
+    def add_ingredients(self, recipe, ingredients_data):
         ingredients = []
         for ingredient_data in ingredients_data:
             ingredient = ingredient_data['id']
