@@ -68,8 +68,7 @@ class Recipe(models.Model):
     author = models.ForeignKey(
         User,
         related_name='recipes',
-        on_delete=models.SET_NULL,
-        null=True,
+        on_delete=models.CASCADE,
         verbose_name='Автор рецепта',
     )
     text = models.TextField('Описание')
@@ -107,12 +106,13 @@ class IngredientInRecipe(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='ingredient_list',
+        related_name='recipe_ingredients',
         verbose_name='Рецепт',
     )
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
+        related_name='ingredient_recipes',
         verbose_name='Ингредиент',
     )
     amount = models.PositiveSmallIntegerField(
@@ -136,7 +136,7 @@ class Favorite(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='favorites',
+        related_name='user_favorites',
         verbose_name='Пользователь',
     )
     recipe = models.ForeignKey(
