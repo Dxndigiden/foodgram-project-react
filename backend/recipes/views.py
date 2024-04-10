@@ -9,7 +9,6 @@ from recipes.models import (Ingredient, IngredientInRecipe,
 from rest_framework.decorators import action
 from rest_framework.permissions import (SAFE_METHODS,
                                         IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly,
                                         AllowAny)
 from rest_framework.response import Response
 from rest_framework.status import (HTTP_400_BAD_REQUEST,
@@ -49,7 +48,7 @@ class RecipeViewSet(ModelViewSet):
     """Вьюсет рецепта"""
 
     queryset = Recipe.objects.all()
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (AllowAny,)
     pagination_class = FoodPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
