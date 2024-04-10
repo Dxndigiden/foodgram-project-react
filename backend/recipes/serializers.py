@@ -1,12 +1,12 @@
 import re
 
+from django.db import models
 from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import (ModelSerializer,
-                                        ReadOnlyField,
                                         CurrentUserDefault)
 
 from core.constants import (MIN_AMOUNT_MESSAGE,
@@ -46,24 +46,12 @@ class TagSerializer(ModelSerializer):
         fields = ('id', 'name', 'color', 'slug')
 
 
-class IngredientRecipeReadSerializer(ModelSerializer):
-    """Сериализатор получения ингредиентов в рецепт"""
-
-    id = IntegerField()
-    name = ReadOnlyField()
-    measurement_unit = ReadOnlyField()
-
-    class Meta:
-        model = IngredientInRecipe
-        fields = ('id', 'name', 'measurement_unit', 'amount')
-
-
 class RecipeReadSerializer(ModelSerializer):
     """Сериализатор чтения рецепта"""
 
     tags = TagSerializer(many=True, read_only=True)
     author = FoodUserSerializer(read_only=True, default=CurrentUserDefault())
-    ingredients = IngredientRecipeReadSerializer(many=True)
+    ingredients = SerializerMethodField()
     image = SerializerMethodField('get_image_url')
     is_favorited = SerializerMethodField(read_only=True)
     is_in_shopping_cart = SerializerMethodField(read_only=True)
@@ -87,6 +75,16 @@ class RecipeReadSerializer(ModelSerializer):
         if obj.image:
             return obj.image.url
         return None
+
+    def get_ingredients(self, obj):
+        recipe = obj
+        ingredients = recipe.ingredients.values(
+            'id',
+            'name',
+            'measurement_unit',
+            amount=models.F('ingredientinrecipe__amount')
+        )
+        return ingredients
 
     def get_is_favorited(self, obj):
         request = self.context.get('request')
