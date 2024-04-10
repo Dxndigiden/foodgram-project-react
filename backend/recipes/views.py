@@ -9,7 +9,7 @@ from recipes.models import (Ingredient, IngredientInRecipe,
 from rest_framework.decorators import action
 from rest_framework.permissions import (SAFE_METHODS,
                                         IsAuthenticated,
-                                        AllowAny)
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.status import (HTTP_400_BAD_REQUEST,
                                    HTTP_204_NO_CONTENT,
@@ -24,6 +24,7 @@ from .serializers import (IngredientSerializer,
                           FavoriteAddSerializer,
                           ShoppingCartAddSerializer)
 from api.pagination import FoodPagination
+from users.permissions import IsAdminOrAuthorOrReadOnly
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
@@ -31,7 +32,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAdminOrAuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientFilter
 
@@ -41,14 +42,14 @@ class TagViewSet(ReadOnlyModelViewSet):
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAdminOrAuthorOrReadOnly,)
 
 
 class RecipeViewSet(ModelViewSet):
     """Вьюсет рецепта"""
 
     queryset = Recipe.objects.all()
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     pagination_class = FoodPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
@@ -57,7 +58,7 @@ class RecipeViewSet(ModelViewSet):
         serializer.save(author=self.request.user)
 
     def get_serializer_class(self):
-        if self.request.method in SAFE_METHODS:
+        if self.action in ('list', 'retrieve'):
             return RecipeReadSerializer
         return RecipeWriteSerializer
 
