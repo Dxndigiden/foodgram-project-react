@@ -63,8 +63,9 @@ class RecipeReadSerializer(ModelSerializer):
 
     tags = TagSerializer(many=True, read_only=True)
     author = FoodUserSerializer(read_only=True, default=CurrentUserDefault())
-    ingredients = IngredienterRecipeReadializer(many=True,
-                                                source='recipe_ingredients',)
+    ingredients = IngredienterRecipeReadializer(
+        many=True, source='recipe_ingredients',
+    )
     image = SerializerMethodField('get_image_url')
     is_favorited = SerializerMethodField(read_only=True)
     is_in_shopping_cart = SerializerMethodField(read_only=True)
