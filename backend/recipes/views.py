@@ -21,6 +21,7 @@ from .serializers import (IngredientSerializer,
                           TagSerializer,
                           FavoriteAddSerializer,
                           ShoppingCartAddSerializer)
+from .models import Favorite, ShoppingCart
 from api.pagination import FoodPagination
 from users.permissions import IsAdminOrAuthorOrReadOnly
 
@@ -46,24 +47,36 @@ class TagViewSet(ReadOnlyModelViewSet):
 class RecipeViewSet(ModelViewSet):
     """Вьюсет рецепта"""
 
-    queryset = Recipe.objects.all()
     permission_classes = (IsAdminOrAuthorOrReadOnly,)
     pagination_class = FoodPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+    def get_queryset(self):
+        queryset = Recipe.objects.select_related('author').prefetch_related(
+            'tags',
+            'ingredients',
+            'shopping_list',
+            'favorites',
+        )
+        if self.request.user.is_authenticated:
+            return queryset.annotate(
+                is_favorited=models.Exists(
+                    Favorite.objects.filter(
+                        user=self.request.user, recipe=models.OuterRef('id')
+                    )
+                ),
+                is_in_shopping_cart=models.Exists(
+                    ShoppingCart.objects.filter(
+                        user=self.request.user, recipe=models.OuterRef('id')
+                    )
+                )
+            )
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
             return RecipeReadSerializer
         return RecipeWriteSerializer
-
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context.update({"request": self.request})
-        return context
 
     @action(
         detail=True,
