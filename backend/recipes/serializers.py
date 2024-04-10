@@ -17,8 +17,6 @@ from core.constants import (MIN_AMOUNT_MESSAGE,
                             MIN_TIME_MESSAGE,
                             MAX_TIME_MESSAGE,
                             MAX_AMOUNT_TIME,
-                            MAX_INGR_MESSAGE,
-                            MAX_AMOUNT_INGR,
                             ERR_ALREADY_RECIPE)
 from recipes.models import (Ingredient,
                             Recipe,
@@ -46,8 +44,8 @@ class TagSerializer(ModelSerializer):
         fields = ('id', 'name', 'color', 'slug')
 
 
-class GetRecipeIngredienterializer(ModelSerializer):
-    """Сериализатор получения ингредиентов в рецепте."""
+class IngredienterRecipeReadializer(ModelSerializer):
+    """Сериализатор чтения ингредиента в рецепт"""
 
     id = IntegerField(source='ingredient.id')
     name = ReadOnlyField(source='ingredient.name')
@@ -65,9 +63,8 @@ class RecipeReadSerializer(ModelSerializer):
 
     tags = TagSerializer(many=True, read_only=True)
     author = FoodUserSerializer(read_only=True, default=CurrentUserDefault())
-    ingredients = GetRecipeIngredienterializer(
-        many=True, source='recipe_ingredients',
-    )
+    ingredients = IngredienterRecipeReadializer(many=True,
+                                                source='recipe_ingredients',)
     image = SerializerMethodField('get_image_url')
     is_favorited = SerializerMethodField(read_only=True)
     is_in_shopping_cart = SerializerMethodField(read_only=True)
@@ -116,10 +113,8 @@ class IngredientInRecipeWriteSerializer(ModelSerializer):
         fields = ('id', 'amount')
 
     def validate_amount(self, value):
-        if value < MIN_AMOUNT_TIME_OR_INGR:
+        if value <= MIN_AMOUNT_TIME_OR_INGR:
             raise ValidationError(MIN_AMOUNT_MESSAGE)
-        if value >= MAX_AMOUNT_INGR:
-            raise ValidationError(MAX_INGR_MESSAGE)
         return value
 
 
